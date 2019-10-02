@@ -96,6 +96,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.set_header('Content-Type', response.headers.get('Content-Type'))
 
         if self.request.path == '/geo/query/acc.cgi':
+            # add metadata
             text = response.body.decode()
             soup = BeautifulSoup(text, 'html.parser')
             doc = NCBIGeoSpider().parse(Selector(text=text))
@@ -103,6 +104,18 @@ class MainHandler(tornado.web.RequestHandler):
             new_tag = soup.new_tag('script', type="application/ld+json")
             new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
             soup.head.insert(0, new_tag)
+
+            # add header
+            header = soup.new_tag('p', align='center')
+            original_link = soup.new_tag('a', href=url)
+            original_link.string = self.request.uri.split('=')[-1]
+            header.append('This page adds structured')
+            schema_link = soup.new_tag('a', href='http://schema.org/Dataset')
+            schema_link.string = 'schema.org/dataset'
+            header.append(schema_link)
+            header.append('metadata to this original GEO data series page for')
+            header.append(original_link)
+            soup.body.insert(0, header)
             self.finish(soup.prettify())
         else:
             self.finish(response.body)
