@@ -12,6 +12,70 @@ from scrapy.selector import Selector
 from discovery.spiders.ncbi_geo import NCBIGeoSpider
 
 
+async def transform(doc, url):
+
+    mappings = {
+        "Title": "name",
+        "Organism": "organism",
+        "Experiment type": "measurementTechnique",
+        "Summary": "description",
+        "Contributor(s)": lambda value: {
+            "creator": [{
+                "@type": "Person",
+                "name": individual
+            } for individual in value.split(', ')]
+        },
+        "Submission date": "datePublished",
+        "Last update date": "dateModified",
+        "Organization": lambda value: {
+            "publisher": {
+                "@type": "Organization",
+                "name": value
+            }
+        },
+    }
+    _doc = {
+        "distribution": {
+            "@type": "dataDownload",
+            "contentUrl": url
+        }
+    }
+    pmid = doc.get("Citation(s)")
+    if pmid:
+
+        # funders
+        http_client = tornado.httpclient.AsyncHTTPClient()
+        url = "https://www.ncbi.nlm.nih.gov/pubmed/" + pmid
+        response = await http_client.fetch(url)
+        xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
+        supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
+        identifiers, funders = [], []
+        for supporter in supporters:
+            terms = supporter.split('/')[:-1]
+            identifiers.append(terms[0])
+            funders.append('/'.join(terms[1:]))
+        _doc['funder'] = {"name": funders}
+        _doc['funding'] = {"identifier": identifiers}
+
+        # citation
+        http_client = tornado.httpclient.AsyncHTTPClient()
+        citation_url = 'https://www.ncbi.nlm.nih.gov/sites/PubmedCitation?id=' + pmid
+        citation_response = await http_client.fetch(citation_url)
+        citation_text = Selector(text=citation_response.body.decode()).xpath('string(/)').get()
+        _doc['citation'] = citation_text
+
+    for key, value in doc.items():
+        if key in mappings:
+            if isinstance(mappings[key], str):
+                _doc[mappings[key]] = value
+            elif callable(mappings[key]):
+                _doc.update(mappings[key](value))
+            else:
+                raise RuntimeError()
+
+    return dict(sorted(_doc.items()))
+
+
 class MainHandler(tornado.web.RequestHandler):
 
     async def get(self):
@@ -27,6 +91,7 @@ class MainHandler(tornado.web.RequestHandler):
             text = response.body.decode()
             soup = BeautifulSoup(text, 'html.parser')
             doc = NCBIGeoSpider().parse(Selector(text=text))
+            doc = await transform(doc, url)
             new_tag = soup.new_tag('script', type="application/ld+json")
             new_tag.string = json.dumps(doc, indent=4)
             soup.head.insert(0, new_tag)
