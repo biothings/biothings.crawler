@@ -49,13 +49,14 @@ async def transform(doc, url):
         response = await http_client.fetch(url)
         xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
         supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
-        identifiers, funders = [], []
-        for supporter in supporters:
-            terms = supporter.split('/')[:-1]
-            identifiers.append(terms[0])
-            funders.append('/'.join(terms[1:]))
-        _doc['funder'] = {"name": funders}
-        _doc['funding'] = {"identifier": identifiers}
+        if supporters:
+            identifiers, funders = [], []
+            for supporter in supporters:
+                terms = supporter.split('/')[:-1]
+                identifiers.append(terms[0])
+                funders.append('/'.join(terms[1:]))
+            _doc['funder'] = {"name": funders}
+            _doc['funding'] = {"identifier": identifiers}
 
         # citation
         http_client = tornado.httpclient.AsyncHTTPClient()
