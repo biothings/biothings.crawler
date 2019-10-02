@@ -55,15 +55,22 @@ async def transform(doc, url):
                 terms = supporter.split('/')[:-1]
                 identifiers.append(terms[0])
                 funders.append('/'.join(terms[1:]))
-            _doc['funder'] = [{"name": funder} for funder in funders]
-            _doc['funding'] = [{"identifier": identifier} for identifier in identifiers]
+            _doc['funding'] = [
+                {
+                    'funder': {
+                        '@type': 'Organization',
+                        'name': funder
+                    },
+                    'identifier': identifier,
+                } for funder, identifier in zip(funders, identifiers)
+            ]
 
         # citation
         http_client = tornado.httpclient.AsyncHTTPClient()
         citation_url = 'https://www.ncbi.nlm.nih.gov/sites/PubmedCitation?id=' + pmid
         citation_response = await http_client.fetch(citation_url)
         citation_text = Selector(text=citation_response.body.decode()).xpath('string(/)').get()
-        _doc['citation'] = citation_text
+        _doc['citation'] = citation_text.replace(u'\xa0', u' ')
 
     for key, value in doc.items():
         if key in mappings:
@@ -94,7 +101,7 @@ class MainHandler(tornado.web.RequestHandler):
             doc = NCBIGeoSpider().parse(Selector(text=text))
             doc = await transform(doc, url)
             new_tag = soup.new_tag('script', type="application/ld+json")
-            new_tag.string = json.dumps(doc, indent=4)
+            new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
             soup.head.insert(0, new_tag)
             self.finish(soup.prettify())
         else:
