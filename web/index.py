@@ -55,8 +55,8 @@ async def transform(doc, url):
                 terms = supporter.split('/')[:-1]
                 identifiers.append(terms[0])
                 funders.append('/'.join(terms[1:]))
-            _doc['funder'] = {"name": funders}
-            _doc['funding'] = {"identifier": identifiers}
+            _doc['funder'] = [{"name": funder} for funder in funders]
+            _doc['funding'] = [{"identifier": identifier} for identifier in identifiers]
 
         # citation
         http_client = tornado.httpclient.AsyncHTTPClient()
