@@ -111,7 +111,7 @@ class MainHandler(tornado.web.RequestHandler):
             original_link.string = self.request.uri.split('=')[-1]
             header.append('This page adds structured')
             schema_link = soup.new_tag('a', href='http://schema.org/Dataset')
-            schema_link.string = 'schema.org/dataset'
+            schema_link.string = 'schema.org/Dataset'
             header.append(schema_link)
             header.append('metadata to this original GEO data series page for')
             header.append(original_link)
