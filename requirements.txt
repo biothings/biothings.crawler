@@ -1,3 +1,4 @@
 elasticsearch
 scrapy
 tornado
+beautifulsoup4
