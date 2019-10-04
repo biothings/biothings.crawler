@@ -139,7 +139,7 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         # resource path redirection
         host = self.request.host.split(':')[0]
         soup.head.insert(0, soup.new_tag(
-            'base', href='//{}:{}/geo/query/'.format(host, options.port)))
+            'base', href='//{}:{}/geo/query/'.format(host, options.redirect)))
 
         self.finish(soup.prettify())
 
@@ -147,6 +147,7 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
 if __name__ == "__main__":
     define("port", default=8080, help="port to listen on")
     define("debug", default=True, help="enable debug logging and autoreload")
+    define("redirect", default=8080, help="port to load resources")
     options.parse_command_line()
     if options.debug:
         logging.getLogger().setLevel('DEBUG')
