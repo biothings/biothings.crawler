@@ -139,8 +139,7 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         # resource path redirection
         host = self.request.host.split(':')[0]
         soup.head.insert(0, soup.new_tag(
-            'base', href='{}://{}:{}/geo/query/'.format(
-                self.request.protocol, host, options.port)))
+            'base', href='//{}:{}/geo/query/'.format(host, options.port)))
 
         self.finish(soup.prettify())
 
