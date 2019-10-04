@@ -13,7 +13,7 @@ from tornado.options import define, options
 from discovery.spiders.ncbi_geo import NCBIGeoSpider
 
 
-async def transform(doc, url):
+async def transform(doc, url, identifier):
 
     mappings = {
         "Title": "name",
@@ -36,9 +36,17 @@ async def transform(doc, url):
         },
     }
     _doc = {
+        "@context": "http://schema.org/",
+        "@type": "Dataset",
+        "identifier": identifier,
         "distribution": {
             "@type": "dataDownload",
             "contentUrl": url
+        },
+        "includedInDataCatalog": {
+            "@type": "DataCatalog",
+            "name": "NCBI GEO",
+            "url": "https://www.ncbi.nlm.nih.gov/geo/"
         }
     }
     pmid = doc.get("Citation(s)")
@@ -111,7 +119,7 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         text = response.body.decode()
         soup = BeautifulSoup(text, 'html.parser')
         doc = NCBIGeoSpider().parse(Selector(text=text))
-        doc = await transform(doc, url)
+        doc = await transform(doc, url, gse_id)
         new_tag = soup.new_tag('script', type="application/ld+json")
         new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
         soup.head.insert(0, new_tag)
