@@ -110,6 +110,9 @@ class NCBIProxyHandler(tornado.web.RequestHandler):
 class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
 
     def initialize(self, path_prefix):
+        if path_prefix:
+            assert path_prefix.startswith('http')
+            assert path_prefix.endswith('/')
         self.path_prefix = path_prefix
 
     async def get(self, gse_id):
@@ -139,8 +142,16 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         header.append(original_link)
         soup.body.insert(0, header)
 
-        # add base href for nginx substitution
-        soup.head.insert(0, soup.new_tag('base', href=self.path_prefix + '/geo/query/'))
+        # resource path redirection
+        if self.path_prefix:
+            for tag in soup.find_all(href=True):
+                if tag['href'].startswith('/'):
+                    tag['href'] = self.path_prefix + tag['href'][1:]
+            for tag in soup.find_all(src=True):
+                if tag['src'].startswith('/'):
+                    tag['src'] = self.path_prefix + tag['src'][1:]
+        soup.head.insert(0, soup.new_tag('base', href=self.path_prefix + 'geo/query/'))
+
         self.finish(soup.prettify())
 
 
