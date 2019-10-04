@@ -109,6 +109,9 @@ class NCBIProxyHandler(tornado.web.RequestHandler):
 
 class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
 
+    def initialize(self, path_prefix):
+        self.path_prefix = path_prefix
+
     async def get(self, gse_id):
 
         url = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + gse_id
@@ -137,18 +140,19 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         soup.body.insert(0, header)
 
         # add base href for nginx substitution
-        soup.head.insert(0, soup.new_tag('base', href='/geo/query/'))
+        soup.head.insert(0, soup.new_tag('base', href=self.path_prefix + '/geo/query/'))
         self.finish(soup.prettify())
 
 
 if __name__ == "__main__":
     define("port", default=8080, help="port to listen on")
     define("debug", default=True, help="enable debug logging and autoreload")
+    define("path", default='', help="path where the service is hosted")
     options.parse_command_line()
     if options.debug:
         logging.getLogger().setLevel('DEBUG')
     application = tornado.web.Application([
-        (r"/(GSE\d+)", NCBIGeoDatasetHandler),
+        (r"/(GSE\d+)", NCBIGeoDatasetHandler, dict(path_prefix=options.path)),
         (tornado.routing.AnyMatches(), NCBIProxyHandler),
     ], debug=options.debug)
     application.listen(options.port)
