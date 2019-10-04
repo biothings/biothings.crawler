@@ -143,13 +143,16 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         soup.body.insert(0, header)
 
         # resource path redirection
+        def substitute(tag, attr):
+            if tag[attr].startswith('/'):
+                tag[attr] = self.path_prefix + tag[attr][1:]
         if self.path_prefix:
             for tag in soup.find_all(href=True):
-                if tag['href'].startswith('/'):
-                    tag['href'] = self.path_prefix + tag['href'][1:]
+                substitute(tag, 'href')
             for tag in soup.find_all(src=True):
-                if tag['src'].startswith('/'):
-                    tag['src'] = self.path_prefix + tag['src'][1:]
+                substitute(tag, 'src')
+            for tag in soup.find_all(background=True):
+                substitute(tag, 'background')
         soup.head.insert(0, soup.new_tag('base', href=self.path_prefix + 'geo/query/'))
 
         self.finish(soup.prettify())
