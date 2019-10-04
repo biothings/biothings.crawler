@@ -133,23 +133,47 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
         soup.head.insert(0, new_tag)
 
-        # add header
-        header = soup.new_tag('p', align='center')
-        original_link = soup.new_tag('a', href=url)
-        original_link.string = gse_id
-        header.append('This page adds structured')
-        schema_link = soup.new_tag('a', href='http://schema.org/Dataset')
-        schema_link.string = 'schema.org/Dataset'
-        header.append(schema_link)
-        header.append('metadata to this original GEO data series page for')
-        header.append(original_link)
-        soup.body.insert(0, header)
-
         # resource path redirection
         host = self.request.host.split(':')[0]
         soup.head.insert(0, soup.new_tag(
             'base', href='//{}:{}/geo/query/'.format(host, options.redirect)))
 
+        # add uniform header
+        html = BeautifulSoup("""
+        <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+            <a class="navbar-brand" href="https://discovery.biothings.io">
+                <img src="https://discovery.biothings.io/static/img/dde-logo-o.svg" width="30" height="30" alt="logo">
+            </a>
+            <a id="logo" class="navbar-brand mainFont caps logoText" href="https://discovery.biothings.io">CTSA DATA DISCOVERY ENGINE</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                <small class="text-dark m-auto font-weight-bold">
+                This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata to this original GEO data series page for <a href="{}">{}</a>
+                </small>
+                <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link h-link" href="https://discovery.biothings.io/best-practices">Discovery Guide</a></li>
+                <li class="nav-item"><a class="nav-link h-link" href="https://discovery.biothings.io/schema-playground">Schema Playground</a></li>
+                </ul>
+            </div>
+        </nav>
+        """.format(url, gse_id), 'html.parser')
+        soup.body.table.insert_before(html)
+        soup.head.insert(2, BeautifulSoup("""
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        """, 'html.parser'))
+        soup.head.insert(2, BeautifulSoup("""
+            <link rel="stylesheet" href="https://discovery.biothings.io/static/css/app.css">
+        """, 'html.parser'))
+        soup.head.insert(2, BeautifulSoup("""
+            <style>
+                body {
+                    padding-top: 80px !important;
+                }
+            </style>
+        """, 'html.parser'))
         self.finish(soup.prettify())
 
 
