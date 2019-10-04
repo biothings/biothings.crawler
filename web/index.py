@@ -95,6 +95,15 @@ async def transform(doc, url, identifier):
 
 class NCBIProxyHandler(tornado.web.RequestHandler):
 
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "https://discovery.biothings.io")
+        self.set_header("Access-Control-Allow-Headers", "X-Requested-With")
+        self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+
+    def options(self):
+        self.set_status(204)
+        self.finish()
+
     async def get(self):
 
         root = 'https://www.ncbi.nlm.nih.gov'
