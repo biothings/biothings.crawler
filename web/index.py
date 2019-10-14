@@ -139,17 +139,19 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         text = response.body.decode()
         soup = BeautifulSoup(text, 'html.parser')
         doc = NCBIGeoSpider().parse(Selector(text=text))
-        if not doc:
-            self.finish(response.body)
-            return
-        doc = await transform(doc, url, gse_id)
-        new_tag = soup.new_tag('script', type="application/ld+json")
-        new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
-        soup.head.insert(0, new_tag)
 
         # resource path redirection
         soup.head.insert(0, soup.new_tag(
             'base', href='//{}/geo/query/'.format(self.host)))
+
+        if not doc:
+            self.finish(soup.prettify())
+            return
+
+        doc = await transform(doc, url, gse_id)
+        new_tag = soup.new_tag('script', type="application/ld+json")
+        new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
+        soup.head.insert(1, new_tag)
 
         # add uniform header
         html = BeautifulSoup("""
