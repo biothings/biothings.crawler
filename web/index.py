@@ -140,7 +140,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         soup = BeautifulSoup(text, 'html.parser')
         doc = NCBIGeoSpider().parse(Selector(text=text))
         if not doc:
-            self.redirect('//' + self.host + path + gse_id)
+            self.finish(response.body)
             return
         doc = await transform(doc, url, gse_id)
         new_tag = soup.new_tag('script', type="application/ld+json")
