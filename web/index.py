@@ -201,7 +201,7 @@ if __name__ == "__main__":
         logging.getLogger().setLevel('DEBUG')
     application = tornado.web.Application([
         (r"/(GSE\d+)", NCBIGeoDatasetHandler),
-        (r"/(sitemap.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
+        (r"/(sitemap\d.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
         (tornado.routing.AnyMatches(), NCBIProxyHandler),
     ], debug=options.debug)
     application.listen(options.port)
