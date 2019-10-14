@@ -1,3 +1,5 @@
+''' Add structured schema.org Dataset metadata to NCBI GEO data series page. '''
+
 import json
 import logging
 
@@ -93,10 +95,17 @@ async def transform(doc, url, identifier):
     return dict(sorted(_doc.items()))
 
 
-class NCBIProxyHandler(tornado.web.RequestHandler):
+class NCBIHandler(tornado.web.RequestHandler):
+
+    @property
+    def host(self):
+        return "{}:{}".format(self.request.host.split(':')[0], options.redirect)
+
+
+class NCBIProxyHandler(NCBIHandler):
 
     def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "https://discovery.biothings.io")
+        self.set_header("Access-Control-Allow-Origin", self.host)
         self.set_header("Access-Control-Allow-Headers", "*")
         self.set_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
 
@@ -116,11 +125,13 @@ class NCBIProxyHandler(tornado.web.RequestHandler):
         self.finish(response.body)
 
 
-class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
+class NCBIGeoDatasetHandler(NCBIHandler):
 
     async def get(self, gse_id):
 
-        url = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + gse_id
+        root = 'https://www.ncbi.nlm.nih.gov'
+        path = '/geo/query/acc.cgi?acc='
+        url = root + path + gse_id
         http_client = tornado.httpclient.AsyncHTTPClient()
         response = await http_client.fetch(url)
 
@@ -128,15 +139,17 @@ class NCBIGeoDatasetHandler(tornado.web.RequestHandler):
         text = response.body.decode()
         soup = BeautifulSoup(text, 'html.parser')
         doc = NCBIGeoSpider().parse(Selector(text=text))
+        if not doc:
+            self.redirect('//' + self.host + path + gse_id)
+            return
         doc = await transform(doc, url, gse_id)
         new_tag = soup.new_tag('script', type="application/ld+json")
         new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
         soup.head.insert(0, new_tag)
 
         # resource path redirection
-        host = self.request.host.split(':')[0]
         soup.head.insert(0, soup.new_tag(
-            'base', href='//{}:{}/geo/query/'.format(host, options.redirect)))
+            'base', href='//{}/geo/query/'.format(self.host)))
 
         # add uniform header
         html = BeautifulSoup("""
