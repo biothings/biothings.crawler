@@ -155,7 +155,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
 
         # add uniform header
         html = BeautifulSoup("""
-        <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        <nav class="navbar navbar-expand-md navbar-dark mainBackDark fixed-top" style="border-bottom: 8px #4A7D8F solid;">
             <a class="navbar-brand" href="https://discovery.biothings.io">
                 <img src="https://discovery.biothings.io/static/img/dde-logo-o.svg" width="30" height="30" alt="logo">
             </a>
@@ -165,7 +165,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             </button>
 
             <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
-                <small class="text-dark m-auto font-weight-bold">
+                <small class="text-muted m-auto font-weight-bold alert alert-light">
                 This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata to this original GEO data series page for <a href="{}">{}</a>
                 </small>
                 <ul class="navbar-nav">
@@ -180,7 +180,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         """, 'html.parser'))
         soup.head.insert(2, BeautifulSoup("""
-            <link rel="stylesheet" href="https://discovery.biothings.io/static/css/app.css">
+            <link rel="stylesheet" href="https://discovery.biothings.io/static/css/styles.css">
         """, 'html.parser'))
         soup.head.insert(2, BeautifulSoup("""
             <style>
