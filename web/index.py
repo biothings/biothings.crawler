@@ -155,11 +155,11 @@ class NCBIGeoDatasetHandler(NCBIHandler):
 
         # add uniform header
         html = BeautifulSoup("""
-        <nav class="navbar navbar-expand-md navbar-dark mainBackDark fixed-top" style="border-bottom: 8px #4A7D8F solid;">
+        <nav class="navbar navbar-expand-md navbar-dark mainBackDark fixed-top p-3" style="border-bottom: 8px #4A7D8F solid;">
             <a class="navbar-brand" href="https://discovery.biothings.io">
                 <img src="https://discovery.biothings.io/static/img/dde-logo-o.svg" width="30" height="30" alt="logo">
             </a>
-            <a id="logo" class="navbar-brand mainFont caps logoText" href="https://discovery.biothings.io">CTSA DATA DISCOVERY ENGINE</a>
+            <a id="logo" class="navbar-brand mainFont caps text-light" href="https://discovery.biothings.io">CTSA DATA DISCOVERY ENGINE</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -185,7 +185,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         soup.head.insert(2, BeautifulSoup("""
             <style>
                 body {
-                    padding-top: 80px !important;
+                    padding-top: 100px !important;
                 }
             </style>
         """, 'html.parser'))
