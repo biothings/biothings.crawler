@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+''' RAW TABLE CONTENT, NOT STRUCTRED METADATA '''
+
 import scrapy
 from scrapy.crawler import CrawlerProcess
 
@@ -51,4 +53,4 @@ if __name__ == '__main__':
     from scrapy.utils.project import get_project_settings
     process = CrawlerProcess(get_project_settings())
     process.crawl(NCBIGeoSpider)
-    process.start()  # the script will block here until the crawling is finished
+    process.start()

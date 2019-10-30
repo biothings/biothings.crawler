@@ -14,7 +14,8 @@ BOT_NAME = 'biothings_crawler'
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
-LOG_LEVEL = 'INFO'
+# LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 ###
 DEPTH_LIMIT = 0
@@ -70,7 +71,6 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    #    'crawler.pipelines.DiscoveryPipeline': 300,
     'crawler.pipelines.ESPipeline': 300,
 }
 

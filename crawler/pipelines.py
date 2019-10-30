@@ -10,19 +10,18 @@ import logging
 from elasticsearch import Elasticsearch
 from scrapy.exceptions import DropItem
 
-# es = Elasticsearch('localhost:9200')
-es = Elasticsearch('localhost:9199')
-
-# class DiscoveryPipeline(object):
-#     def process_item(self, item, spider):
-#         return item
+es = Elasticsearch('localhost:9200')
 
 
 class ESPipeline(object):
 
     def process_item(self, item, spider):
 
-        res = es.index(index=spider.name, id=item.pop('_id'), body=item)
+        _id = item.pop('_id', item.get('@id'))
+        # use spider-injected _id field if possible
+        # otherwise use @id field in the document
+        # generate random id if none of them exist
+        res = es.index(index=spider.name, id=_id, body=item)
         logging.debug(res)
 
         return item
