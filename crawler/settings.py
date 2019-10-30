@@ -9,10 +9,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'discovery'
+BOT_NAME = 'biothings_crawler'
 
-SPIDER_MODULES = ['discovery.spiders']
-NEWSPIDER_MODULE = 'discovery.spiders'
+SPIDER_MODULES = ['crawler.spiders']
+NEWSPIDER_MODULE = 'crawler.spiders'
 
 LOG_LEVEL = 'INFO'
 
@@ -52,13 +52,13 @@ ROBOTSTXT_OBEY = False
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 # SPIDER_MIDDLEWARES = {
-#    'discovery.middlewares.DiscoverySpiderMiddleware': 543,
+#    'crawler.middlewares.DiscoverySpiderMiddleware': 543,
 # }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 # DOWNLOADER_MIDDLEWARES = {
-#    'discovery.middlewares.DiscoveryDownloaderMiddleware': 543,
+#    'crawler.middlewares.DiscoveryDownloaderMiddleware': 543,
 # }
 
 # Enable or disable extensions
@@ -70,8 +70,8 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    #    'discovery.pipelines.DiscoveryPipeline': 300,
-    'discovery.pipelines.ESPipeline': 300,
+    #    'crawler.pipelines.DiscoveryPipeline': 300,
+    'crawler.pipelines.ESPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

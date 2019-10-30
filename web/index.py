@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from scrapy.selector import Selector
 from tornado.options import define, options
 
-from discovery.spiders.ncbi_geo import NCBIGeoSpider
+from crawler.spiders.ncbi_geo import NCBIGeoSpider
 
 
 async def transform(doc, url, identifier):

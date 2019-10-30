@@ -8,7 +8,7 @@
 import scrapy
 
 
-class DiscoveryItem(scrapy.Item):
+class BiothingsCrawlerItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
