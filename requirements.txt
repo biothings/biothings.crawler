@@ -1,4 +1,6 @@
 elasticsearch
+elasticsearch-dsl
 scrapy
 tornado
 beautifulsoup4
+extruct
