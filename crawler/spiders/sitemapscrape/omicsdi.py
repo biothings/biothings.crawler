@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from scrapy.spiders import SitemapSpider
-from .. import JsonLdMixin
+
+from ..helper import JsonLdMixin
 
 
 class OmicsdiSpider(SitemapSpider, JsonLdMixin):

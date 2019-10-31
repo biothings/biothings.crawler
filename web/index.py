@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 from scrapy.selector import Selector
 from tornado.options import define, options
 
-from crawler.spiders.ncbi_geo import NCBIGeoSpider
+from crawler.spiders import NCBIGeoSpider
 
 
 async def transform(doc, url, identifier):
@@ -51,37 +51,39 @@ async def transform(doc, url, identifier):
             "url": "https://www.ncbi.nlm.nih.gov/geo/"
         }
     }
-    pmid = doc.get("Citation(s)")
-    if pmid:
+    pmids = doc.get("Citation(s)")
+    if pmids:
+        _doc['citation'] = []
+        for pmid in pmids.split(', '):
 
-        # funders
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        url = "https://www.ncbi.nlm.nih.gov/pubmed/" + pmid
-        response = await http_client.fetch(url)
-        xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
-        supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
-        if supporters:
-            identifiers, funders = [], []
-            for supporter in supporters:
-                terms = supporter.split('/')[:-1]
-                identifiers.append(terms[0])
-                funders.append('/'.join(terms[1:]))
-            _doc['funding'] = [
-                {
-                    'funder': {
-                        '@type': 'Organization',
-                        'name': funder
-                    },
-                    'identifier': identifier,
-                } for funder, identifier in zip(funders, identifiers)
-            ]
+            # funders
+            http_client = tornado.httpclient.AsyncHTTPClient()
+            url = "https://www.ncbi.nlm.nih.gov/pubmed/" + pmid
+            response = await http_client.fetch(url)
+            xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
+            supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
+            if supporters:
+                identifiers, funders = [], []
+                for supporter in supporters:
+                    terms = supporter.split('/')[:-1]
+                    identifiers.append(terms[0])
+                    funders.append('/'.join(terms[1:]))
+                _doc['funding'] = [
+                    {
+                        'funder': {
+                            '@type': 'Organization',
+                            'name': funder
+                        },
+                        'identifier': identifier,
+                    } for funder, identifier in zip(funders, identifiers)
+                ]
 
-        # citation
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        citation_url = 'https://www.ncbi.nlm.nih.gov/sites/PubmedCitation?id=' + pmid
-        citation_response = await http_client.fetch(citation_url)
-        citation_text = Selector(text=citation_response.body.decode()).xpath('string(/)').get()
-        _doc['citation'] = citation_text.replace(u'\xa0', u' ')
+            # citation
+            http_client = tornado.httpclient.AsyncHTTPClient()
+            citation_url = 'https://www.ncbi.nlm.nih.gov/sites/PubmedCitation?id=' + pmid
+            citation_response = await http_client.fetch(citation_url)
+            citation_text = Selector(text=citation_response.body.decode()).xpath('string(/)').get()
+            _doc['citation'].append(citation_text.replace(u'\xa0', u' '))
 
     for key, value in doc.items():
         if key in mappings:

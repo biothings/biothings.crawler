@@ -3,7 +3,8 @@ import json
 import logging
 
 import scrapy
-from .. import JsonLdMixin
+
+from ..helper import JsonLdMixin
 
 
 class HarvardSpider(scrapy.Spider, JsonLdMixin):
