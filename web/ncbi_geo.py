@@ -197,6 +197,13 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         self.finish(soup.prettify())
 
 
+APP_LIST = [
+    (r"/(GSE\d+)", NCBIGeoDatasetHandler),
+    (r"/(sitemap\d?.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
+    (tornado.routing.AnyMatches(), NCBIProxyHandler),
+]
+
+
 if __name__ == "__main__":
     define("port", default=8080, help="port to listen on")
     define("debug", default=True, help="enable debug logging and autoreload")
@@ -204,10 +211,6 @@ if __name__ == "__main__":
     options.parse_command_line()
     if options.debug:
         logging.getLogger().setLevel('DEBUG')
-    application = tornado.web.Application([
-        (r"/(GSE\d+)", NCBIGeoDatasetHandler),
-        (r"/(sitemap\d?.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
-        (tornado.routing.AnyMatches(), NCBIProxyHandler),
-    ], debug=options.debug)
+    application = tornado.web.Application(APP_LIST, debug=options.debug)
     application.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
