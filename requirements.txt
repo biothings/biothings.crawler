@@ -1,6 +1,4 @@
-elasticsearch
-elasticsearch-dsl
+git+git://github.com/biothings/biothings.api.git@es7#egg=biothings
 scrapy
-tornado
 beautifulsoup4
 extruct
