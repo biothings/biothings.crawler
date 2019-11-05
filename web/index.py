@@ -60,23 +60,26 @@ async def transform(doc, url, identifier):
             http_client = tornado.httpclient.AsyncHTTPClient()
             url = "https://www.ncbi.nlm.nih.gov/pubmed/" + pmid
             response = await http_client.fetch(url)
-            xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
-            supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
-            if supporters:
-                identifiers, funders = [], []
-                for supporter in supporters:
-                    terms = supporter.split('/')[:-1]
-                    identifiers.append(terms[0])
-                    funders.append('/'.join(terms[1:]))
-                _doc['funding'] = [
-                    {
-                        'funder': {
-                            '@type': 'Organization',
-                            'name': funder
-                        },
-                        'identifier': identifier,
-                    } for funder, identifier in zip(funders, identifiers)
-                ]
+            title_xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/h4[4]/text()'
+            # grant support section exists
+            if Selector(text=response.body.decode()).xpath(title_xpath).get() == 'Grant support':
+                xpath = '//*[@id="maincontent"]/div/div[5]/div/div[6]/div[1]/div/ul[4]/li/a/text()'
+                supporters = Selector(text=response.body.decode()).xpath(xpath).getall()
+                if supporters:
+                    identifiers, funders = [], []
+                    for supporter in supporters:
+                        terms = supporter.split('/')[:-1]
+                        identifiers.append(terms[0])
+                        funders.append('/'.join(terms[1:]))
+                    _doc['funding'] = [
+                        {
+                            'funder': {
+                                '@type': 'Organization',
+                                'name': funder
+                            },
+                            'identifier': identifier.strip(),
+                        } for funder, identifier in zip(funders, identifiers)
+                    ]
 
             # citation
             http_client = tornado.httpclient.AsyncHTTPClient()
