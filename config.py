@@ -1,6 +1,7 @@
 
 from biothings.web.settings.default import *
 from biothings.web.api.es.handlers import QueryHandler
+from web.ncbi_geo import APP_LIST as GEO_APP
 
 # *****************************************************************************
 # Elasticsearch
@@ -12,13 +13,10 @@ ES_HOST = ['localhost:9199']
 # *****************************************************************************
 # Tornado URL Patterns
 # *****************************************************************************
-UNINITIALIZED_APP_LIST = [
-    # (r"/sitemap.xml", RedirectHandler, {"url": "/static/sitemap.xml"}),
-]
-API_ENDPOINTS = [
+UNINITIALIZED_APP_LIST = GEO_APP
+APP_LIST = [
     (r"/api/query/?", QueryHandler),
 ]
-APP_LIST = API_ENDPOINTS  # + WEB_ENDPOINTS
 
 # *****************************************************************************
 # Biothings SDK Settings
