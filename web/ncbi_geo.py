@@ -10,10 +10,12 @@ import tornado.routing
 import tornado.web
 from bs4 import BeautifulSoup
 from scrapy.selector import Selector
-from tornado.options import define, options
+from tornado.options import options
 
+import elasticsearch
 from crawler.spiders import NCBIGeoSpider
 
+client = elasticsearch.Elasticsearch(port=9199)
 
 async def transform(doc, url, identifier):
 
@@ -104,6 +106,7 @@ class NCBIHandler(tornado.web.RequestHandler):
 
     @property
     def host(self):
+        ''' Publicized content serving host address and port number. '''
         return "{}:{}".format(self.request.host.split(':')[0], options.redirect)
 
 
@@ -131,7 +134,6 @@ class NCBIProxyHandler(NCBIHandler):
 
 class NCBIRandomDatasetExplorer(NCBIHandler):
 
-class NCBIGeoDatasetHandler(NCBIHandler):
     async def get(self):
         http_client = tornado.httpclient.AsyncHTTPClient()
         random_id_req = 'http://localhost:{}/api/query?q=__any__&fields=_id&size=1'.format(options.port)
@@ -154,24 +156,48 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         url = root + path + gse_id
         http_client = tornado.httpclient.AsyncHTTPClient()
         response = await http_client.fetch(url)
-
-        # add metadata
         text = response.body.decode()
         soup = BeautifulSoup(text, 'html.parser')
-        doc = NCBIGeoSpider().parse(Selector(text=text))
 
-        # resource path redirection
+        # add resource path redirection
         soup.head.insert(0, soup.new_tag(
             'base', href='//{}/geo/query/'.format(self.host)))
 
+        # try to retrieve pre-loaded structured metadata
+        try:
+            doc = client.get(id=gse_id, index='ncbi_geo_indexed')
+        except elasticsearch.ElasticsearchException:
+            doc = None
+        else:
+            doc = doc['_source']
+    
+        # try to parse raw metadata and do live transform
         if not doc:
-            self.finish(soup.prettify())
-            return
+            logging.warning('[%s] Cannot retrieve from es.', gse_id)
+            try:
+                # capture raw metadata
+                doc = NCBIGeoSpider().parse(Selector(text=text))
+                # transform to structured metadata
+                doc = await transform(doc, url, gse_id)
+            except Exception:
+                logging.warning('[%s] Cannot parse raw metadata.', gse_id)
 
-        doc = await transform(doc, url, gse_id)
-        new_tag = soup.new_tag('script', type="application/ld+json")
-        new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
-        soup.head.insert(1, new_tag)
+
+        if doc:
+            # set header message
+            message = """
+            This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata 
+            to the original GEO data series page <a href="{}">{}</a> <a href="{}">Try a different dataset.</a>
+            """.format(url, gse_id, '//{}/_random.html?redirect'.format(self.host))
+            # add structured metadata
+            new_tag = soup.new_tag('script', type="application/ld+json")
+            new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
+            soup.head.insert(1, new_tag)
+        else:
+            # set header message
+            message = """
+            No structured metadata on this page. <a href="{}">Try a different URL.</a> 
+            """.format('//{}/_random.html?redirect'.format(self.host))
 
         # add uniform header
         html = BeautifulSoup("""
@@ -186,7 +212,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
 
             <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
                 <small class="text-muted m-auto font-weight-bold alert alert-light">
-                This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata to this original GEO data series page for <a href="{}">{}</a>
+                {}
                 </small>
                 <ul class="navbar-nav">
                 <li class="nav-item"><a class="nav-link h-link" href="https://discovery.biothings.io/best-practices">Discovery Guide</a></li>
@@ -194,8 +220,8 @@ class NCBIGeoDatasetHandler(NCBIHandler):
                 </ul>
             </div>
         </nav>
-        """.format(url, gse_id), 'html.parser')
-        soup.body.table.insert_before(html)
+        """.format(message), 'html.parser')
+        soup.body.insert(2, html)
         soup.head.insert(2, BeautifulSoup("""
             <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         """, 'html.parser'))
@@ -214,18 +240,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
 
 APP_LIST = [
     (r"/(GSE\d+)", NCBIGeoDatasetHandler),
+    (r"/_random.html", NCBIRandomDatasetExplorer),
     (r"/(sitemap\d?.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
     (tornado.routing.AnyMatches(), NCBIProxyHandler),
 ]
-
-
-if __name__ == "__main__":
-    define("port", default=8080, help="port to listen on")
-    define("debug", default=True, help="enable debug logging and autoreload")
-    define("redirect", default=8080, help="port to load resources")
-    options.parse_command_line()
-    if options.debug:
-        logging.getLogger().setLevel('DEBUG')
-    application = tornado.web.Application(APP_LIST, debug=options.debug)
-    application.listen(options.port)
-    tornado.ioloop.IOLoop.current().start()
