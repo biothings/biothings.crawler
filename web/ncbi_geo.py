@@ -129,6 +129,21 @@ class NCBIProxyHandler(NCBIHandler):
         self.set_header('Content-Type', response.headers.get('Content-Type'))
         self.finish(response.body)
 
+class NCBIRandomDatasetExplorer(NCBIHandler):
+
+class NCBIGeoDatasetHandler(NCBIHandler):
+    async def get(self):
+        http_client = tornado.httpclient.AsyncHTTPClient()
+        random_id_req = 'http://localhost:{}/api/query?q=__any__&fields=_id&size=1'.format(options.port)
+        response = await http_client.fetch(random_id_req)
+        _id = json.loads(response.body)['hits'][0]['_id']
+
+        if self.get_argument('redirect', False) is not False:
+            self.redirect('//{}/{}'.format(self.host, _id))
+        else:
+            await NCBIGeoDatasetHandler.get(self, _id)
+
+
 
 class NCBIGeoDatasetHandler(NCBIHandler):
 
