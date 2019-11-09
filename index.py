@@ -1,3 +1,4 @@
+''' Start Script with Server Side Default '''
 
 from biothings.web.index_base import main, options
 from biothings.web.settings import BiothingESWebSettings
@@ -5,7 +6,7 @@ from tornado.options import define, options
 
 define("redirect", default=8080, help="port to load resources")
 
-web_settings = BiothingESWebSettings(config='config')
+web_settings = BiothingESWebSettings(config='web.config')
 
 APP_LIST = web_settings.generate_app_list(reverse=True)
 

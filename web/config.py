@@ -6,7 +6,7 @@ from web.ncbi_geo import APP_LIST as GEO_APP
 # *****************************************************************************
 # Elasticsearch
 # *****************************************************************************
-ES_INDEX = '_all'
+ES_INDEX = 'ncbi_geo_indexed'
 ES_DOC_TYPE = '_doc'
 ES_HOST = ['localhost:9199']
 
@@ -23,3 +23,4 @@ APP_LIST = [
 # *****************************************************************************
 ACCESS_CONTROL_ALLOW_METHODS = 'HEAD,GET,POST,DELETE,PUT,OPTIONS'
 DISABLE_CACHING = True
+ALLOW_RANDOM_QUERY = True
