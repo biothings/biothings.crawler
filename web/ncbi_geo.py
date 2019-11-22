@@ -192,8 +192,8 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             # set header message
             message = """
             This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata 
-            to the original GEO data series page <a href="{}">{}</a> <a href="{}">Try a different dataset.</a>
-            """.format(url, gse_id, '//{}/_random.html?redirect'.format(self.host))
+            to the original GEO data series page <a href="{}">{}</a>
+            """.format(url, gse_id)
             # add structured metadata
             new_tag = soup.new_tag('script', type="application/ld+json")
             new_tag.string = json.dumps(doc, indent=4, ensure_ascii=False)
