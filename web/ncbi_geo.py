@@ -240,7 +240,6 @@ class NCBIGeoDatasetHandler(NCBIHandler):
 
 APP_LIST = [
     (r"/(GSE\d+)", NCBIGeoDatasetHandler),
-    (r"/demo/(GSE\d+)", NCBIGeoDatasetHandler),
     (r"/_random.html", NCBIRandomDatasetExplorer),
     (r"/(sitemap\d?.xml)", tornado.web.StaticFileHandler, {"path": "web"}),
     (tornado.routing.AnyMatches(), NCBIProxyHandler),
