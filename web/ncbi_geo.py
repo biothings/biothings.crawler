@@ -123,6 +123,11 @@ class NCBIProxyHandler(NCBIHandler):
 
     async def get(self):
 
+        if self.host != self.request.host:
+            self.set_status(404)
+            self.write("Error Page.")
+            return
+
         root = 'https://www.ncbi.nlm.nih.gov'
         url = root + self.request.uri
         http_client = tornado.httpclient.AsyncHTTPClient()
