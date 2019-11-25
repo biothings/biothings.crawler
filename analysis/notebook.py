@@ -32,7 +32,7 @@ properties = sorted([
 
 # %%
 client = Elasticsearch('su07:9199')
-indicies = ('zenodo', 'omicsdi', 'harvard_dataverse')
+indicies = ('zenodo', 'omicsdi', 'harvard_dataverse','ncbi_geo_transformed')
 
 result = defaultdict(partial(defaultdict, Counter))
 
