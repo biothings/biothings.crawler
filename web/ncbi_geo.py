@@ -214,7 +214,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             <a class="navbar-brand" href="https://discovery.biothings.io">
                 <img src="https://discovery.biothings.io/static/img/dde-logo-o.svg" width="30" height="30" alt="logo">
             </a>
-            <a id="logo" class="navbar-brand mainFont caps text-light" href="https://discovery.biothings.io">CTSA DATA DISCOVERY ENGINE</a>
+            <a id="logo" class="navbar-brand mainFont caps text-light" href="https://discovery.biothings.io">DATA DISCOVERY ENGINE</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
