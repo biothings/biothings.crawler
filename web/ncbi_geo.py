@@ -2,7 +2,7 @@
 
 import json
 import logging
-
+import os
 import tornado.httpclient
 import tornado.ioloop
 import tornado.options
@@ -16,6 +16,7 @@ import elasticsearch
 from crawler.spiders import NCBIGeoSpider
 
 client = elasticsearch.Elasticsearch(port=9199)
+
 
 async def transform(doc, url, identifier):
 
@@ -112,6 +113,9 @@ class NCBIHandler(tornado.web.RequestHandler):
 
 class NCBIProxyHandler(NCBIHandler):
 
+    with open(os.path.join("web", "404.html")) as file:
+        NOT_FOUND_PAGE = file.read()
+
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", self.host)
         self.set_header("Access-Control-Allow-Headers", "*")
@@ -125,7 +129,7 @@ class NCBIProxyHandler(NCBIHandler):
 
         if self.host != self.request.host:
             self.set_status(404)
-            self.write("Error Page.")
+            self.write(self.NOT_FOUND_PAGE)
             return
 
         root = 'https://www.ncbi.nlm.nih.gov'
@@ -137,11 +141,13 @@ class NCBIProxyHandler(NCBIHandler):
         self.set_header('Content-Type', response.headers.get('Content-Type'))
         self.finish(response.body)
 
+
 class NCBIRandomDatasetExplorer(NCBIHandler):
 
     async def get(self):
         http_client = tornado.httpclient.AsyncHTTPClient()
-        random_id_req = 'http://localhost:{}/api/query?q=__any__&fields=_id&size=1'.format(options.port)
+        random_id_req = 'http://localhost:{}/api/query?q=__any__&fields=_id&size=1'.format(
+            options.port)
         response = await http_client.fetch(random_id_req)
         _id = json.loads(response.body)['hits'][0]['_id']
 
@@ -149,7 +155,6 @@ class NCBIRandomDatasetExplorer(NCBIHandler):
             self.redirect('//{}/{}'.format(self.host, _id))
         else:
             await NCBIGeoDatasetHandler.get(self, _id)
-
 
 
 class NCBIGeoDatasetHandler(NCBIHandler):
@@ -175,7 +180,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             doc = None
         else:
             doc = doc['_source']
-    
+
         # try to parse raw metadata and do live transform
         if not doc:
             logging.warning('[%s] Cannot retrieve from es.', gse_id)
@@ -187,11 +192,10 @@ class NCBIGeoDatasetHandler(NCBIHandler):
             except Exception:
                 logging.warning('[%s] Cannot parse raw metadata.', gse_id)
 
-
         if doc:
             # set header message
             message = """
-            This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata 
+            This page adds structured schema.org <a href="http://schema.org/Dataset">Dataset</a> metadata
             to the original GEO data series page <a href="{}">{}</a>
             """.format(url, gse_id)
             # add structured metadata
@@ -201,7 +205,7 @@ class NCBIGeoDatasetHandler(NCBIHandler):
         else:
             # set header message
             message = """
-            No structured metadata on this page. <a href="{}">Try a different URL.</a> 
+            No structured metadata on this page. <a href="{}">Try a different URL.</a>
             """.format('//{}/_random.html?redirect'.format(self.host))
 
         # add uniform header
