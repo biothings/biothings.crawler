@@ -1,4 +1,3 @@
-git+git://github.com/biothings/biothings.api.git@es7#egg=biothings
 scrapy
 beautifulsoup4
 extruct
