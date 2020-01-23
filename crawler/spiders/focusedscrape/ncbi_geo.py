@@ -2,7 +2,6 @@
 ''' RAW TABLE CONTENT, NOT STRUCTRED METADATA '''
 
 import scrapy
-from scrapy.crawler import CrawlerProcess
 
 
 class NCBIGeoSpider(scrapy.Spider):
@@ -19,10 +18,6 @@ class NCBIGeoSpider(scrapy.Spider):
 
     def parse(self, response):
 
-        # table = response.xpath(
-        #     '/html/body/table/tbody/tr/td/table[6]/tbody/tr[3]/td[2]'
-        #     '/table/tbody/tr/td/table/tbody/tr/td/table[2]/tbody/tr/td'
-        #     '/table[1]/tbody/tr')
         table = response.xpath(
             '/html/body/table/tr/td/table[6]/tr[3]/td[2]'
             '/table/tr/td/table/tr/td/table[2]/tr/td'
@@ -48,9 +43,20 @@ class NCBIGeoSpider(scrapy.Spider):
         return data if data else None
 
 
-if __name__ == '__main__':
+def main():
+    """
+    Crawl NCBI Geo Datasets.
+    You can run this file directly.
+    """
 
+    from scrapy.crawler import CrawlerProcess
     from scrapy.utils.project import get_project_settings
+
     process = CrawlerProcess(get_project_settings())
     process.crawl(NCBIGeoSpider)
     process.start()
+
+
+if __name__ == '__main__':
+
+    main()
