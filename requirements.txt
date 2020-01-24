@@ -1,6 +1,9 @@
+git+git://github.com/biothings/biothings.api.git@es7#egg=biothings
 scrapy
 selenium # required for source 'immport'
 beautifulsoup4
 elasticsearch
 elasticsearch-dsl
 extruct
+tornado
+biothings
