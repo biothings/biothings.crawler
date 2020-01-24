@@ -1,5 +1,6 @@
 scrapy
+selenium # required for source 'immport'
 beautifulsoup4
-extruct
 elasticsearch
 elasticsearch-dsl
+extruct
