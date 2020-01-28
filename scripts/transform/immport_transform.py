@@ -83,6 +83,15 @@ def main():
         except Exception as e:
             logging.warning(e)
 
+        metadata = {
+            "includedInDataCatalog": {
+                "@type": "DataCatalog",
+                "name": "ImmPort",
+                "url": "http://immport.org/"
+            }
+        }
+        doc.update(metadata)
+
         try:
             funding = []
             for pmid in dic.get('Pubmed Id', []):
