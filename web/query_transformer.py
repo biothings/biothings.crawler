@@ -5,7 +5,7 @@ DATASOURCES = (
     'ncbi_geo',
     'omicsdi',
     'zenodo',
-    'immport'
+    'immport',
     'nyu')
 
 
