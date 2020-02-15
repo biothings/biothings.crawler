@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-''' RAW TABLE CONTENT, NOT STRUCTRED METADATA '''
+'''
+    NCBI Geo Datasource
+
+    Scrape contents in HTML tables
+    Not structured metadata
+
+    https://www.ncbi.nlm.nih.gov/robots.txt
+    Declared No Robots and crawl delay as of 02/15/2020.
+    Defined long rules so the file content is not included here.
+
+'''
 
 import scrapy
 

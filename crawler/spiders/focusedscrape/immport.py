@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 '''
-ImmPort Spider
-Scrape shared studies on ImmPort
+    ImmPort Spider
+    Scrape shared studies on ImmPort
 
-Entry Point: https://www.immport.org/shared/search
-Example Pages:
-    Without Pmid: https://www.immport.org/shared/study/SDY1
-    With Pmid: https://www.immport.org/shared/study/SDY1025
+    Entry Point: https://www.immport.org/shared/search
+    Example Pages:
+        Without Pmid: https://www.immport.org/shared/study/SDY1
+        With Pmid: https://www.immport.org/shared/study/SDY1025
 
-More on https://github.com/biothings/biothings.crawler/issues/1
+    No robots.txt detected.
+
+    More on https://github.com/biothings/biothings.crawler/issues/1
 '''
 
 import csv

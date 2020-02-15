@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+    Zenodo Datasource
+
+    No robots.txt as of 02/15/2020
+
+"""
+
 from scrapy.spiders import SitemapSpider
 
 from ..helper import JsonLdMixin

@@ -1,17 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-NYU Data Catalog
+    NYU Data Catalog
 
-Example URL:
-    https://datacatalog.med.nyu.edu/dataset/10042
+    Example URL:
+        https://datacatalog.med.nyu.edu/dataset/10042
 
-ID Range:
-    10001 - 10387 as of 12/12/2019
+    ID Range:
+        10001 - 10387 as of 12/12/2019
 
-Metadata:
-    Structured in schema.org standard.
-    Statically embedded in dataset pages.
-    Embedded as "application/ld+json" script tags.
+    Metadata:
+        Structured in schema.org standard.
+        Statically embedded in dataset pages.
+        Embedded as "application/ld+json" script tags.
+
+    robots.txt:
+    https://datacatalog.med.nyu.edu/robots.txt
+
+        # www.robotstxt.org/
+        # www.google.com/support/webmasters/bin/answer.py?hl=en&answer=156449
+
+        User-agent: *
+
 """
 
 import scrapy

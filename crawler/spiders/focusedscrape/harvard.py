@@ -1,4 +1,28 @@
 # -*- coding: utf-8 -*-
+"""
+    Harvard Dataverse
+
+    https://dataverse.harvard.edu/robots.txt
+    Declared crawling delay as of 02/15/2020
+
+        User-agent: *
+        Disallow: /
+        User-agent: Googlebot
+        Allow: /$
+        Allow: /dataset.xhtml
+        Allow: /dataverse/
+        Allow: /sitemap/
+        Allow: /api/datasets/:persistentId/thumbnail
+        Allow: /javax.faces.resource/images/
+        Disallow: /dataverse/*?q
+        Disallow: /dataverse/*/search
+        Disallow: /
+        Crawl-delay: 10
+        # sitemap: https://dataverse.harvard.edu/sitemap/sitemap.xml
+        # Created initially using: http://www.mcanerin.com/EN/search-engine/robots-txt.asp
+        # Verified using: http://tool.motoricerca.info/robots-checker.phtml
+
+"""
 import json
 import logging
 
