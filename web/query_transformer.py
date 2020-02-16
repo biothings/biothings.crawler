@@ -2,6 +2,7 @@ from biothings.web.api.es.transform import ESResultTransformer
 
 DATASOURCES = (
     'harvard_dataverse',
+    'discovery',
     'ncbi_geo',
     'omicsdi',
     'zenodo',
