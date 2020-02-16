@@ -28,7 +28,7 @@ class ImmPortSpider(scrapy.Spider):
 
     """
 
-    name = 'immport_test'
+    name = 'immport'
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
             'crawler.middlewares.SeleniumChromeDownloaderMiddleware': 543,
