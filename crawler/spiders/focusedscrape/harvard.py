@@ -50,7 +50,7 @@ class HarvardSpider(scrapy.Spider, JsonLdMixin):
                 url=item['url'],
                 callback=self.extract_jsonld,
                 cb_kwargs={
-                    '_id': item['global_id']
+                    '_id': item['url']
                 }
             )
 
