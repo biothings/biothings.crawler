@@ -1,3 +1,11 @@
+'''
+    Trasnform NCBI Geo to Schema.org Structured Metadata
+
+    Assume the original _id needs to be transformed
+    from _id = GSE9 -> _id = URL the data is scraped from
+
+'''
+
 import logging
 import time
 
@@ -6,7 +14,7 @@ from elasticsearch_dsl.connections import connections
 
 from helper import pmid_to_citation, pmid_to_funding, transform
 
-connections.create_connection(hosts=['su07:9199'])
+connections.create_connection(hosts=['localhost:9199'])
 
 NCBI_MAPPINGS = {
     "Title": "name",
@@ -15,8 +23,8 @@ NCBI_MAPPINGS = {
     "Summary": "description",
     "Contributor(s)": lambda value: {
         "creator": [{
-                "@type": "Person",
-                "name": individual
+            "@type": "Person",
+            "name": individual
         } for individual in value.split(', ')]
     },
     "Submission date": "datePublished",
@@ -45,10 +53,14 @@ def main():
 
         logging.info('%s', _id)
 
+        ### Transform data fields ###
+
         try:
             doc = transform(dic, NCBI_MAPPINGS)
         except Exception as e:
             logging.warning(e)
+
+        ### Add metadata fixtures ###
 
         meta = {
             "identifier": _id,
@@ -58,11 +70,13 @@ def main():
             },
             "includedInDataCatalog": {
                 "@type": "DataCatalog",
-                "name": "NCBI GEO",
+                "name": "NCBI GEO from Metadataplus",
                 "url": "https://www.ncbi.nlm.nih.gov/geo/"
             }
         }
         doc.update(meta)
+
+        ### Add funding field ###
 
         try:
             funding = []
@@ -74,6 +88,8 @@ def main():
             if funding:
                 doc['funding'] = funding
 
+        ### Add citation field ###
+
         try:
             citations = []
             for pmid in dic.get('Citation(s)', []):
@@ -84,7 +100,7 @@ def main():
             if citations:
                 doc['citation'] = citations
 
-        client.index(index='ncbi_geo_transformed', id=url, body=doc)
+        client.index(index='transformed_ncbi_geo', id=url, body=doc)
         time.sleep(0.2)  # throttle request rates
 
 
