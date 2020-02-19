@@ -4,6 +4,8 @@
     Assume the original _id needs to be transformed
     from _id = GSE9 -> _id = URL the data is scraped from
 
+    'Citation(s)' field may not exist. If exist, must be str.
+    May include a number, or numbers separated by ', '.
 '''
 
 import logging
@@ -76,29 +78,33 @@ def main():
         }
         doc.update(meta)
 
-        ### Add funding field ###
+        if 'Citation(s)' in dic:
 
-        try:
-            funding = []
-            for pmid in dic.get('Citation(s)', []):
-                funding += pmid_to_funding(pmid)
-        except Exception as e:
-            logging.warning(e)
-        else:
-            if funding:
-                doc['funding'] = funding
+            ### Add funding field ###
 
-        ### Add citation field ###
+            try:
+                funding = []
+                for pmid in dic['Citation(s)'].split(','):
+                    pmid = pmid.strip()
+                    funding += pmid_to_funding(pmid)
+            except Exception as e:
+                logging.warning(e)
+            else:
+                if funding:
+                    doc['funding'] = funding
 
-        try:
-            citations = []
-            for pmid in dic.get('Citation(s)', []):
-                citations.append(pmid_to_citation(pmid))
-        except Exception as e:
-            logging.warning(e)
-        else:
-            if citations:
-                doc['citation'] = citations
+            ### Add citation field ###
+
+            try:
+                citations = []
+                for pmid in dic['Citation(s)'].split(','):
+                    pmid = pmid.strip()
+                    citations.append(pmid_to_citation(pmid))
+            except Exception as e:
+                logging.warning(e)
+            else:
+                if citations:
+                    doc['citation'] = citations
 
         client.index(index='transformed_ncbi_geo', id=url, body=doc)
         time.sleep(0.2)  # throttle request rates
