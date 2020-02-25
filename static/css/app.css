@@ -1,0 +1,42 @@
+:root {
+  --main: #25468B;
+  --sec: #4776C9;
+}
+
+@media only screen and (max-width: 800px) {
+  .navbar{
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--sec) !important;
+    z-index: 1000;
+  }
+}
+
+.text-main{
+  color: var(--main);
+}
+
+.text-sec{
+  color: var(--sec);
+}
+
+.bg-main{
+  background-color: var(--main);
+}
+
+.bg-sec{
+  background-color: var(--sec);
+}
+
+p{
+  font-family: 'Hepta Slab', sans-serif;
+}
+
+h1,h2,h3,h4,h5{
+  font-family: 'Darker Grotesque', sans-serif;
+}
+
+section.full{
+  min-height: 100vh;
+}
