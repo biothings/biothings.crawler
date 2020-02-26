@@ -10,21 +10,19 @@
 		<meta property="og:url" content="https://crawler.biothings.io/">
     <meta property="og:site_name" content="Metadata Crawler">
     <meta property="og:title" content="Metadata Crawler" />
-    <meta name="description" content="Serving structured metadata with Biothings API for the following datasets in schema.org standard" />
+    <meta name="description" content="Serving structured dataset metadata with Biothings API in schema.org standard" />
     <meta property="og:image" content="https://i.postimg.cc/nrsFNFCZ/featured.jpg">
-
     <meta property="og:image:type" content="image/jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Serving structured metadata with Biothings API for the following datasets in schema.org standard">
+    <meta property="og:description" content="Serving structured dataset metadata with Biothings API in schema.org standard">
     <meta property="fb:app_id" content="" />
     <meta name="twitter:title" content="Metadata Crawler" />
     <meta name="twitter:url" content="https://crawler.biothings.io/" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:description" content="Serving structured metadata with Biothings API for the following datasets in schema.org standard" />
+    <meta name="twitter:description" content="Serving structured dataset metadata with Biothings API in schema.org standard" />
 		<!-- IMAGES -->
-
 		<link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png" />
     <meta name="twitter:image" content="/static/img/favicon.ico" />
 		<link rel="apple-touch-icon" sizes="57x57" href="/static/img/apple-touch-icon.png" />
@@ -42,7 +40,6 @@
 		<meta name="msapplication-TileColor" content="#5bbad5">
 		<meta name="theme-color" content="#5bbad5">
 		<link rel="shortcut icon" type="image/png" href="/static/img/favicon.ico"/>
-
 		<!-- Styles -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 		<link rel="stylesheet" href="/static/css/app.css" />
@@ -56,7 +53,7 @@
           <img src="/static/img/crawler.svg" width="30" height="30" class="d-inline-block align-top" alt="logo">  <span class="d-none d-md-inline text-main">Metadata <b class="text-sec">Crawler</b></span>
         </a>
         <li class="nav-item d-block d-md-none">
-          <a class="nav-link btn bg-dark" href="#tryit">Try It</a>
+          <a class="nav-link btn bg-dark text-light" href="#tryit">Try API</a>
         </li>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
@@ -64,7 +61,7 @@
         <div class="collapse navbar-collapse" id="navbarText">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#tryit">Try It</a>
+              <a class="nav-link" href="#tryit">API</a>
             </li>
             <li class="nav-item active">
               <a class="nav-link" href="#sources">Sources</a>
@@ -73,12 +70,12 @@
         </div>
       </nav>
       <section class="container-fluid d-flex justify-content-center align-items-center full">
-        <div class="p-2">
+        <div class="p-2 w-75 text-center">
           <img src="/static/img/crawlerfull.svg" alt="Metadata Crawler" class="d-none d-md-block"/>
           <img src="/static/img/crawler.svg" alt="Metadata Crawler" class="d-block d-md-none w-50 m-auto"/>
           <h1 id="biothings-crawler" class="text-main d-block d-md-none text-center"><span class="text-main">Metadata <b class="text-sec">Crawler</b></span></h1>
           <h4>
-            Serving structured metadata with <a href="https://biothings.io" target="_blank" rel="noreferrer">Biothings API</a> in <a href="https://schema.org/" target="_blank" rel="noreferrer">Schema.org</a> standard.
+            Serving structured dataset metadata with <a href="https://biothings.io" target="_blank" rel="noreferrer">Biothings API</a> in <a href="https://schema.org/" target="_blank" rel="noreferrer">Schema.org</a> standard.
           </h4>
           <p class="text-center text-muted">Learn more on <a href="https://github.com/biothings/biothings.crawler" target="_blank" rel="noreferrer">Github</a></p>
           <p class="text-center text-muted">
@@ -117,7 +114,7 @@
       <section class="container-fluid bg-main d-flex justify-content-center align-items-center full">
         <div class="text-light text-center w-100">
           <h1 class="mb-5" id="tryit">
-            TRY IT
+            TRY THE API
           </h1>
           <form class="d-flex justify-content-center flex-wrap w-100 m-0 row" @submit.prevent="callApi()">
             <div class="form-group p-1 col-sm-12 col-md-6 m-auto">
@@ -166,21 +163,6 @@
           </p>
         </div>
       </footer>
-
-
-      <!-- <ul>
-      <li>Omicsdi</li>
-      <li>Zenodo</li>
-      <li>Harvard Dataverse</li>
-      <li>NCBI Geo</li>
-      <li>ImmPort</li>
-      <li>NYU Data Catalog</li>
-      <li>CTSA Data Discovery Engine</li>
-      </ul>
-      <h2 id="examples-">Examples:</h2>
-      <p><a href="http://crawler.biothings.io/api/query?q=__any__">http://crawler.biothings.io/api/query?q=__any__</a><br />
-      <a href="http://crawler.biothings.io/api/query?q=virus">http://crawler.biothings.io/api/query?q=virus</a></p>
-      <p>More info on <a href="https://github.com/biothings/biothings.crawler">Github</a></p> -->
       </div>
   		<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
@@ -208,15 +190,7 @@
                 '/api/query?q=virus',
                 '/api/query?q=__any__'
               ],
-              dbs:[
-                "Omicsdi",
-                "Zenodo",
-                "Harvard Dataverse",
-                "NCBI Geo",
-                "ImmPort",
-                "NYU Data Catalog",
-                "CTSA Data Discovery Engine",
-              ],
+              dbs:[],
               querySelected:'',
               queryString:'',
               querySelectionType:'example',
@@ -234,7 +208,8 @@
               if (myUrl) {
                 $('#callResults').html('');
                 self.loading = true;
-                axios.get(myUrl).then(res=>{
+
+                axios.get(myUrl+`&timestamp=${new Date().getTime()}`).then(res=>{
                   self.loading = false;
                   renderjson.set_show_to_level(7);
                   $('#callResults').html( renderjson(res.data) );
@@ -290,6 +265,34 @@
         mounted:function(){
           var self = this;
           self.prepareAnimation();
+
+          let sources = "{{sources}}";
+          if (sources) {
+            try {
+              let parser = new DOMParser;
+              let dom = parser.parseFromString(sources,'text/html');
+              let decodedString = dom.body.textContent;
+              let list = eval(decodedString);
+              let names =[]
+              for (var i = 0; i < list.length; i++) {
+                names.push(list[i]['name'])
+              }
+              console.log('from server');
+              self.dbs = names;
+
+            } catch (e) {
+              console.log('default names');
+              self.dbs = [
+                "Omicsdi",
+                "Zenodo",
+                "Harvard Dataverse",
+                "NCBI Geo",
+                "ImmPort",
+                "NYU Data Catalog",
+                "CTSA Data Discovery Engine",
+              ]
+            }
+          }
 
           var currentTime = new Date()
           var year = currentTime.getFullYear()
