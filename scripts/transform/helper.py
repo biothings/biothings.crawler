@@ -1,3 +1,6 @@
+import os
+import xml.etree.ElementTree as ET
+
 import requests
 from scrapy.selector import Selector
 
@@ -109,6 +112,82 @@ def pmid_to_citation(pmid):
     citation = Selector(text=body).xpath('string(/)').get()
     return citation.replace(u'\xa0', u' ')
 
+EUTILS_URL_TEMPLATE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={id}&retmode=xml&api_key={api_key}"
+
+def pmid_with_eutils(pmid):
+    '''
+    Use pmid to retrieve both citation and funding info
+    '''
+    url = EUTILS_URL_TEMPLATE.format(id=pmid, api_key=os.environ['API_KEY'])
+    body = requests.get(url).text
+    root = ET.fromstring(body)
+
+    assert root
+
+    # funding field
+
+    grants = []
+    for grant_element in root.findall('.//Grant'):
+
+        grant = {}
+        if grant_element.find('Agency') is not None:
+            grant['funder'] = {
+                '@type': 'Organization',
+                'name': grant_element.find('Agency').text
+            }
+
+        if grant_element.find('GrantID') is not None:
+            grant['identifier'] = grant_element.find('GrantID').text
+
+        if grant:
+            grants.append(grant)
+
+    # citation field
+    citation = ''
+
+    ## author string
+
+    authors = []
+    for author in root.findall('.//Author'):
+        lastname = author.find('LastName').text
+        initials = author.find('Initials').text
+        authors.append(f"{lastname} {initials}")
+
+    if len(authors) > 4:
+        string = ', '.join(authors[:4])
+        string += ' et al. '
+        citation += string
+
+    elif len(authors) > 1:
+        string =  ', '.join(authors)
+        string += '. '
+        citation += string
+
+    elif len(authors) == 1:
+        citation += authors[0]
+        citation += '. '
+
+    ## the remaining string
+
+    features = (
+        ('.//MedlineCitation/Article/ArticleTitle', '{} '),
+        ('.//MedlineCitation/MedlineJournalInfo/MedlineTA', '{} '),
+        ('.//MedlineCitation/Article/Journal/JournalIssue/PubDate/Year', '{} '),
+        ('.//MedlineCitation/Article/Journal/JournalIssue/PubDate/Month', '{};'),
+        ('.//MedlineCitation/Article/Journal/JournalIssue/Volume', '{}'),
+        ('.//MedlineCitation/Article/Journal/JournalIssue/Issue', '({})'),
+        ('.//MedlineCitation/Article/Pagination/MedlinePgn', ':{}'),
+    )
+
+    for feature, template in features:
+        if root.find(feature) is not None:
+            text = root.find(feature).text
+            citation += template.format(text)
+
+    return grants, citation
+
+
 
 # pprint(pmid_to_funder("20109744"))
 # print(pmid_to_citation("20109744"))
+# print(pmid_with_eutils("20109744"))
