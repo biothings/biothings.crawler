@@ -113,7 +113,8 @@ class FigshareAPISpider(scrapy.Spider):
             yield scrapy.Request(
                 url=self.form_url(page=page + 1, published_since=published_since),
                 cb_kwargs={
-                    'page': page + 1
+                    'page': page + 1,
+                    'published_since': published_since
                 }
             )
 
