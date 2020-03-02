@@ -14,8 +14,8 @@ BOT_NAME = 'biothings_crawler'
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
-# LOG_LEVEL = 'INFO'
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
+# LOG_LEVEL = 'DEBUG'
 
 ###
 DEPTH_LIMIT = 0

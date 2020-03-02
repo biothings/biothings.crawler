@@ -25,7 +25,9 @@
 """
 import json
 import logging
+import os
 
+import elasticsearch
 import requests
 import scrapy
 
@@ -39,6 +41,7 @@ class HarvardSpider(scrapy.Spider, JsonLdMixin):
     start_urls = [
         base_url
     ]
+
 
     def parse(self, response, start=0):
 
@@ -71,10 +74,14 @@ class HarvardSpider(scrapy.Spider, JsonLdMixin):
 class HarvardTracingSpider(scrapy.Spider):
     """
     Resolve Redirections and Validate Links
+
+    "createdAt": "2011-02-20T14:25:02Z" is used for sorting by date
     """
 
     name = 'harvard_tracing'
-    base_url = 'https://dataverse.harvard.edu/api/search?q=*&type=dataset'
+    base_url = 'https://dataverse.harvard.edu/api/search?q=*&type=dataset&sort=date&per_page=500&order=asc'
+    client = elasticsearch.Elasticsearch(os.getenv('ES_HOST', 'localhost:9200'))
+    step = 500
     start_urls = [
         base_url
     ]
@@ -83,16 +90,17 @@ class HarvardTracingSpider(scrapy.Spider):
 
         api_res = json.loads(response.body)
         assert api_res['status'] == 'OK'
+        next_start = start + self.step
 
-        base = 0
         for item in api_res['data']['items']:
-
-            base += 1
+            # skip already scrapped
+            if self.client.exists(index=self.name, id=item['url']):
+                logging.info('Skipping %s.', item['url'])
+                continue
             try:
                 r = requests.head(item['url'], allow_redirects=True)
                 yield {
-                    "_id": start + base,
-                    "origin": item['url'],
+                    "_id": item['url'],
                     "success": True,
                     "location": r.url,
                     "status": r.status_code,
@@ -103,19 +111,19 @@ class HarvardTracingSpider(scrapy.Spider):
                 }
             except Exception:
                 yield {
-                    "_id": start + base,
-                    "origin": item['url'],
+                    "_id": item['url'],
                     "success": False,
                     "exception": str(Exception)
                 }
 
-        logging.info('Requesting next page from item %s.', start + 10)
+        logging.info('Requesting next page from item %s.', next_start)
+        self.client.indices.put_mapping(index=self.name, body={"_meta":{"next_start":next_start}})
 
-        if len(api_res['data']['items']) == 10:
+        if api_res['data']['start'] <= api_res['data']['total_count']:
             yield scrapy.Request(
-                url=self.base_url + '&start=' + str(start + 10),
+                url=self.base_url + '&start=' + str(next_start),
                 cb_kwargs={
-                    'start': start + 10
+                    'start': next_start
                 }
             )
         else:
