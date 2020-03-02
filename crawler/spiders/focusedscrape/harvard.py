@@ -79,9 +79,9 @@ class HarvardTracingSpider(scrapy.Spider):
     """
 
     name = 'harvard_tracing'
-    base_url = 'https://dataverse.harvard.edu/api/search?q=*&type=dataset&sort=date&per_page=500&order=asc'
+    base_url = 'https://dataverse.harvard.edu/api/search?q=*&type=dataset&sort=date&per_page=250&order=asc'
     client = elasticsearch.Elasticsearch(os.getenv('ES_HOST', 'localhost:9200'))
-    step = 500
+    step = 250
 
     def start_requests(self):
 
