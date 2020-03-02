@@ -9,12 +9,14 @@
 '''
 
 import logging
+import os
 import time
 
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.connections import connections
 
-from helper import pmid_to_citation, pmid_to_funding, transform
+from helper import (pmid_to_citation, pmid_to_funding, pmid_with_eutils,
+                    transform)
 
 connections.create_connection(hosts=['localhost:9199'])
 
@@ -44,7 +46,7 @@ def main():
     client = connections.get_connection()
     search = Search(index='ncbi_geo')
 
-    for doc in search.params(scroll='1d').scan():
+    for doc in search.params(scroll='1d').scan(): # pylint: disable=no-member
 
         _id = doc.meta.id
         dic = doc.to_dict()
@@ -80,34 +82,57 @@ def main():
 
         if 'Citation(s)' in dic:
 
-            ### Add funding field ###
+            if 'API_KEY' in os.environ:
 
-            try:
                 funding = []
+                citations = []
+
                 for pmid in dic['Citation(s)'].split(','):
                     pmid = pmid.strip()
-                    funding += pmid_to_funding(pmid)
-            except Exception as e:
-                logging.warning(e)
-            else:
+                    grants, citation = pmid_with_eutils(pmid)
+                    funding += grants
+                    citations.append(citation)
+
                 if funding:
                     doc['funding'] = funding
 
-            ### Add citation field ###
-
-            try:
-                citations = []
-                for pmid in dic['Citation(s)'].split(','):
-                    pmid = pmid.strip()
-                    citations.append(pmid_to_citation(pmid))
-            except Exception as e:
-                logging.warning(e)
-            else:
                 if citations:
                     doc['citation'] = citations
 
+                time.sleep(0.1)  # throttle request rates
+
+            else:
+
+                ### Add funding field ###
+
+                try:
+                    funding = []
+                    for pmid in dic['Citation(s)'].split(','):
+                        pmid = pmid.strip()
+                        funding += pmid_to_funding(pmid)
+                except Exception as e:
+                    logging.warning(e)
+                else:
+                    if funding:
+                        doc['funding'] = funding
+
+                ### Add citation field ###
+
+                try:
+                    citations = []
+                    for pmid in dic['Citation(s)'].split(','):
+                        pmid = pmid.strip()
+                        citations.append(pmid_to_citation(pmid))
+                except Exception as e:
+                    logging.warning(e)
+                else:
+                    if citations:
+                        doc['citation'] = citations
+
+                time.sleep(0.2)  # throttle request rates
+
+
         client.index(index='transformed_ncbi_geo', id=url, body=doc)
-        time.sleep(0.2)  # throttle request rates
 
 
 if __name__ == '__main__':
