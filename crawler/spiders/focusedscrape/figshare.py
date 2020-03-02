@@ -108,16 +108,23 @@ class FigshareAPISpider(scrapy.Spider):
                 yield item
 
             self.client.indices.put_mapping(index=self.name, body={"_meta": {"published_date": published_date}})
-            logging.info('Requesting page %s since %s.', page + 1, published_since)
 
-            yield scrapy.Request(
-                url=self.form_url(page=page + 1, published_since=published_since),
-                cb_kwargs={
-                    'page': page + 1,
-                    'published_since': published_since
-                }
-            )
+            if page + 1 < 10:
+                logging.info('Requesting page %s since %s.', page + 1, published_since)
+                yield scrapy.Request(
+                    url=self.form_url(page=page + 1, published_since=published_since),
+                    cb_kwargs={
+                        'page': page + 1,
+                        'published_since': published_since
+                    }
+                )
+            else:
+                logging.info('Requesting page %s since %s.', 1, published_date)
+                yield scrapy.Request(
+                    url=self.form_url(page= 1, published_since=published_date),
+                    cb_kwargs={
+                        'page': 1,
+                        'published_since': published_date
+                    }
+                )                
 
-        else:
-
-            logging.info('Ending on page %s for %s.', page, api_res)
