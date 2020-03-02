@@ -82,9 +82,14 @@ class HarvardTracingSpider(scrapy.Spider):
     base_url = 'https://dataverse.harvard.edu/api/search?q=*&type=dataset&sort=date&per_page=500&order=asc'
     client = elasticsearch.Elasticsearch(os.getenv('ES_HOST', 'localhost:9200'))
     step = 500
-    start_urls = [
-        base_url
-    ]
+
+    def start_requests(self):
+
+        res = self.client.indices.get_mapping(index=self.name)
+        mapping = res[self.name]['mappings']
+        next_start = mapping.get('_meta', {}).get('next_start', 0)
+        url = self.base_url + '&start=' + str(next_start)
+        return [scrapy.FormRequest(url, callback=self.parse, cb_kwargs={'start': next_start})]
 
     def parse(self, response, start=0):
 
