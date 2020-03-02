@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    Figshare Datasource
+    Figshare Brunel
 
     robots.txt as of 02/15/2020
     https://figshare.com/robots.txt
@@ -17,9 +17,9 @@ from scrapy.spiders import CrawlSpider, Rule
 from ..helper import JsonLdMixin
 
 
-class FigshareSpider(CrawlSpider, JsonLdMixin):
+class FigshareBrunelSpider(CrawlSpider, JsonLdMixin):
 
-    name = 'figshare'
+    name = 'figshare_brunel'
     allowed_domains = ['figshare.com']
     start_urls = [('https://brunel.figshare.com/browse')]
     rules = (
