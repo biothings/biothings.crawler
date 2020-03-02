@@ -101,8 +101,8 @@ class FigshareAPISpider(scrapy.Spider):
             for item in api_res:
                 published_date = item['published_date'][:10]
                 # skip already scrapped
-                if self.client.exists(index=self.name, id=item['url']):
-                    logging.info('Skipping %s.', item['url'])
+                if self.client.exists(index=self.name, id=item['id']):
+                    logging.info('Skipping %s.', item['id'])
                     continue
                 item.update(_id=item['id'])
                 yield item
