@@ -24,6 +24,14 @@
   color: var(--main);
 }
 
+.faded-white{
+  background: rgba(255, 255, 255,.5)
+}
+
+.bold{
+  font-weight: bold !important;
+}
+
 .text-sec{
   color: var(--sec);
 }
