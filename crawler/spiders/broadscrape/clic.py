@@ -48,7 +48,7 @@ logger.setLevel(logging.DEBUG)
 
 # Add the log message handler to the logger
 handler = logging.handlers.RotatingFileHandler(
-              LOG_FILENAME, maxBytes=2000, backupCount=10)
+              LOG_FILENAME, maxBytes=1000000, backupCount=100)
 
 logger.addHandler(handler)
 
