@@ -13,8 +13,23 @@
   }
 }
 
+.hero {
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: top center;
+    background-image: url('../img/back.png');
+  }
+
 .text-main{
   color: var(--main);
+}
+
+.faded-white{
+  background: rgba(255, 255, 255,.5)
+}
+
+.bold{
+  font-weight: bold !important;
 }
 
 .text-sec{
@@ -39,4 +54,32 @@ h1,h2,h3,h4,h5{
 
 section.full{
   min-height: 100vh;
+}
+
+.disclosure{
+  font-weight: bold;
+}
+.syntax{
+  color:#3879c6;
+}
+.string{
+  color: #86411b;
+}
+.number{
+  color: purple;
+}
+.boolean{
+  color: purple;
+}
+.key{
+
+}
+.keyword{
+  color: red;
+}
+.object.syntax{
+  color: green;
+}
+.array.syntax{
+color: blue;
 }
