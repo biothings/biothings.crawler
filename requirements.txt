@@ -1,4 +1,4 @@
-git+git://github.com/biothings/biothings.api.git@es7#egg=biothings
+git+git://github.com/biothings/biothings.api.git@f1e74c85f10d62893d3cf8c6dba954ffa4cbb762#egg=biothings
 scrapy
 selenium # required for source 'immport'
 beautifulsoup4

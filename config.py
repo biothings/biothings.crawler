@@ -1,30 +1,35 @@
-''' Biothings API Web Config '''
+''' 
+Biothings API Web Config for
+http://crawler.biothings.io/
+'''
 
-import os
-
-from biothings.web.api.es.handlers import QueryHandler
-from biothings.web.settings.default import *
-
-from web.query_builder import MPQueryBuilder
-from web.query_transformer import MPResultTransformer
+from web.pipeline import MPQueryBuilder
+from web.pipeline import MPResultTransformer
 
 # *****************************************************************************
 # Elasticsearch
 # *****************************************************************************
-ES_DOC_TYPE = '_doc'
-ES_HOST = os.getenv("ES_HOST", 'localhost:9200')
-ES_INDEX = os.getenv('ES_INDEX', '_all')  # query endpoint
-
+ES_DOC_TYPE = '_all'
+ES_HOST = 'localhost:9200'
+ES_INDEX = 'indexed_*'
+ES_INDICES = {
+    'dataverse':'indexed_harvard_*',
+    'discovery':'indexed_discovery',
+    'omicsdi':'indexed_omicsdi',
+    'zenodo':'indexed_zenodo',
+    'immport':'indexed_immport',
+    'nyu':'indexed_nyu',
+    'geo':'indexed_ncbi*',
+}
 # *****************************************************************************
 # Tornado URL Patterns
 # *****************************************************************************
-APP_LIST = [
-    (r"/api/query/?", QueryHandler),
-]
-
+API_PREFIX = 'api'
+API_VERSION = ''
+TEMPLATE_PATH = 'static'
 # *****************************************************************************
 # Biothings SDK Settings
 # *****************************************************************************
 ES_QUERY_BUILDER = MPQueryBuilder
-ES_RESULT_TRANSFORMER = MPResultTransformer
+ES_RESULT_TRANSFORM = MPResultTransformer
 ALLOW_RANDOM_QUERY = True
