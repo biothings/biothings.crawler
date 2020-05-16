@@ -1,5 +1,20 @@
+"""
+https://github.com/SuLab/outbreak.info-resources/issues/10#issuecomment-620188085
 
-# https://github.com/SuLab/outbreak.info-resources/issues/10#issuecomment-620188085
+Reindex Script:
+{
+	"source": {
+    	"index": "zenodo_covid"
+	},
+	"dest": {
+    	"index": "zenodo_covid_transformed"
+	},
+	"script":{
+  		"lang": "painless",
+    	"source": "if (ctx._source.containsKey('creator')) { for (int i = 0; i < ctx._source['creator'].length; ++i) {ctx._source['creator'][i]['affiliation']=['name':ctx._source['creator'][i]['affiliation']];}}"
+  }
+}
+"""
 
 import json
 import logging
