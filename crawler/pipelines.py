@@ -40,7 +40,7 @@ class ESPipeline(object):
         """
 
         _id = item.pop('_id', item.get('@id'))
-        _index = os.getenv('ES_INDEX', spider.name)
+        _index = os.getenv('ES_INDEX', 'cralwer_' + spider.name)
 
         res = self.client.index(index=_index, id=_id, body=item)
         logging.debug(res)
