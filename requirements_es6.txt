@@ -1,7 +1,0 @@
-scrapy
-selenium # required for source 'immport'
-beautifulsoup4
-extruct
-biothings==0.7.2
-elasticsearch==6.3.1
-elasticsearch-dsl==6.3.1
