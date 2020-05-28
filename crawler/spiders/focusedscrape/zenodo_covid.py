@@ -55,5 +55,3 @@ class ZenodoCovidSpider(Spider, JsonLdMixin):
                         '_id': url
                     }
                 )
-            # debug
-            break
