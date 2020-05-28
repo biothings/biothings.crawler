@@ -20,41 +20,9 @@ import os
 
 from elasticsearch import Elasticsearch
 
+from crawler.upload import CrawlerIndices
 
-class ESClient:
-
-    def __init__(self):
-        self.host = os.getenv('ES_HOST')
-        self.client = Elasticsearch(self.host)
-        self.version = int(self.client.info()['version']['number'].split('.')[0])
-        self._valid_indices = set()
-
-    def index(self, _index, _id, _source):
-
-        if _index not in self._valid_indices:
-            if not self.client.indices.exists(index=_index):
-                request_body = {
-                    "settings": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 0
-                    },
-                    "mappings": {
-                        "enabled": "false"
-                    }
-                }
-                if self.version < 7:
-                    request_body['mappings'] = {
-                        "_doc": request_body['mappings']
-                    }
-                self.client.indices.create(
-                    index=_index,
-                    body=request_body)
-            self._valid_indices.add(_index)
-
-        return self.client.index(index=_index, id=_id, body=_source)
-
-
-client = ESClient()
+indices = CrawlerIndices(Elasticsearch(os.getenv('ES_HOST')))
 
 
 class ESPipeline:
@@ -62,9 +30,6 @@ class ESPipeline:
     Store received items in Elasticsearch.
     Spider name will be used as the index name.
     """
-
-    def __init__(self):
-        self.client = client
 
     def process_item(self, item, spider):
         """
@@ -79,7 +44,7 @@ class ESPipeline:
         _id = item.pop('_id', item.get('@id'))
         _index = os.getenv('ES_INDEX', 'crawler_' + spider.name)
 
-        res = client.index(_index, _id, item)
+        res = indices.index(_index, _id, item)
         logging.debug(res)
 
         return item

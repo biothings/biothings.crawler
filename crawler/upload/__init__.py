@@ -23,10 +23,11 @@ uploaders = {
 
 class CrawlerESUploader:
 
-    __NAME = 'default'
-
+    NAME = 'default'
+    
     # # # # # # # # # # # # # # #
     #  Quick Transform Settings #
+    # # # # # # # # # # # # # # #
 
     TRANSFORM_KEYS = {
         # "<original_field_name>": "<new_field_name>"
@@ -37,9 +38,14 @@ class CrawlerESUploader:
 
     # # # # # # # # # # # # # # #
     #  Index  Related  Settings #
-
+    # # # # # # # # # # # # # # #
+    
     INDEX_MAPPINGS = {
         # "<field_name>": "<elasticsearch_definition>"
+    }
+    INDEX_SETTINGS = {
+        # "query.default_field": "all",
+        # "analysis": { ... }
     }
     # create a new index if mapping conflicts happen
     INDEX_FIXCONFLICTS = False
@@ -47,13 +53,13 @@ class CrawlerESUploader:
 
     def __init__(self, **kwargs):
 
-        self.indexing = DataIndexing(self, **kwargs)
+        self.indexing = DataReindex(self, **kwargs)
         self.transform = DataTransform(self)
         self.metadata = DataMetadata(self)
 
     def __init_subclass__(cls):
         super().__init_subclass__()
-        uploaders[cls.__NAME] = cls
+        uploaders[cls.NAME] = cls
 
     def upload(self):
         """
@@ -66,8 +72,8 @@ class CrawlerESUploader:
             self.TRANSFORM_VALUES,
             self.INDEX_MAPPINGS
         )) and all((
-            self.extract_id is not CrawlerESUploader.extract_id,
-            self.transform_doc is not CrawlerESUploader.transform_doc
+            self.extract_id is CrawlerESUploader.extract_id,
+            self.transform_doc is CrawlerESUploader.transform_doc
         )):
             self.indexing.reindex()
             return
@@ -108,7 +114,7 @@ class CrawlerESUploader:
 
 class CrawlerDatasetESUploader(CrawlerESUploader):
 
-    __NAME='dataset'
+    NAME = 'dataset'
 
     def transform_doc(self, doc):
 
@@ -131,7 +137,7 @@ class DataTransform:
         Apply dictionay key, value transformations.
         Find transformation settings in the uploader instance.
         """
-        doc = self._transform_names(doc, self.uploader.TRANSFORM_NAMES)
+        doc = self._transform_names(doc, self.uploader.TRANSFORM_KEYS)
         doc = self._transform_values(doc, self.uploader.TRANSFORM_VALUES)
         return doc
 
@@ -155,10 +161,12 @@ class DataTransform:
         for key in doc:
             if key in mapping_funcs:
                 _doc[key] = mapping_funcs[key](_doc[key])
+            else:
+                _doc[key] = doc[key]
         return _doc
 
 
-class DataIndexing:
+class DataReindex:
     """
     An Elasticsearch Reindexing Unit.
 
@@ -180,6 +188,10 @@ class DataIndexing:
         self.dest_index = dest_index
 
         self.uploader = uploader
+        self.indexing = CrawlerIndices(
+            self.dest_client, 
+            self.uploader.INDEX_MAPPINGS, 
+            self.uploader.INDEX_SETTINGS)
         self._valid_indices = set()
 
     def reindex(self, query=None):
@@ -225,12 +237,12 @@ class DataIndexing:
         Creates or updates a document in the destination index.
         """
         if not self.uploader.INDEX_FIXCONFLICTS:
-            self._index(self.dest_index, _id, _source)
+            self.indexing.index(self.dest_index, _id, _source)
             return
 
         for suffix_num in range(self.uploader.INDEX_FIX_MAX_NUMS):
             try:  # to create file in the first possible index
-                self._index(
+                self.indexing.index(
                     '_'.join((self.dest_index, suffix_num)),
                     _id, _source, self.dest_index
                 )
@@ -242,30 +254,6 @@ class DataIndexing:
             else:  # success
                 break
 
-    def _index(self, _index, _id, _source, alias=None):
-
-        # check index
-        if _index not in self._valid_indices:
-            if self.dest_client.indices.exists(index=_index):
-                pass  # TODO check if mapping aligns
-            else:  # need to create the index
-                self.dest_client.indices.create(
-                    index=self.dest_index,
-                    body={
-                        "settings": {
-                            "number_of_shards": 1,
-                            "number_of_replicas": 0
-                        },
-                        "mappings": {
-                            "properties": self.uploader.INDEX_MAPPINGS
-                        },
-                        "aliases": {alias: {}} if alias else {}
-                    })
-            self._valid_indices.add(_index)
-
-        # index document
-        self.dest_client.index(_index, _source, id=_id)
-
 
 class DataMetadata:
 
@@ -273,3 +261,41 @@ class DataMetadata:
         self.uploader = uploader
 
     # TODO handles the _meta field
+
+
+class CrawlerIndices:
+
+    def __init__(self, client, mappings=None, settings=None):
+
+        self.client = client
+        self.settings = settings or {}
+        self.mappings = mappings if mappings is not None else dict(enabled="false")
+        self._es_version = int(self.client.info()['version']['number'].split('.')[0])
+        self._valid_indices = set()
+
+    def index(self, _index, _id, _source, alias=None):
+
+        if _index not in self._valid_indices:
+            if not self.client.indices.exists(index=_index):
+                settings = {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0
+                }
+                settings.update(self.settings)
+                request_body = {
+                    "settings": {"index": settings},
+                    "mappings": self.mappings,
+                    "aliases": {alias: {}} if alias else {}
+                }
+                if self._es_version < 7:
+                    request_body['mappings'] = {
+                        "_doc": request_body['mappings']
+                    }
+                self.client.indices.create(
+                    index=_index,
+                    body=request_body)
+            self._valid_indices.add(_index)
+
+        return self.client.index(index=_index, id=_id, body=_source)
+
+from .zenodo_covid import ZenodoCovidUploader
