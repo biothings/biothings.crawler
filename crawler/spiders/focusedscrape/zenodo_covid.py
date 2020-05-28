@@ -1,19 +1,21 @@
 """
 https://github.com/SuLab/outbreak.info-resources/issues/10#issuecomment-620188085
 
-Reindex Script:
+Reindex Script Example:
 {
 	"source": {
-    	"index": "zenodo_covid"
+    	"index": "crawler_zenodo_covid"
 	},
 	"dest": {
-    	"index": "zenodo_covid_transformed"
+    	"index": "outbreak_zenodo"
 	},
 	"script":{
   		"lang": "painless",
     	"source": "if (ctx._source.containsKey('creator')) { for (int i = 0; i < ctx._source['creator'].length; ++i) {ctx._source['creator'][i]['affiliation']=['name':ctx._source['creator'][i]['affiliation']];}}"
   }
 }
+
+Currently we prefer to use the transform module instead.
 """
 
 import json
