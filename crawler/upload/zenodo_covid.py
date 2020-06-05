@@ -4,9 +4,11 @@ python -m crawler.upload
        --src-index=crawler_zenodo_covid
        --dest-index=outbreak-resources-zenodo"
 """
-
+import re
 from datetime import datetime
+
 import requests
+
 from . import CrawlerESUploader
 
 MAPPING_URL = 'https://raw.githubusercontent.com/SuLab/outbreak.info-resources/master/outbreak_resources_es_mapping.json'
@@ -58,22 +60,21 @@ class ZenodoCovidUploader(CrawlerESUploader):
             'versionDate': datetime.now()
         }
 
-        # date property
-        # TODO
-
         # Force all @type:ScholarlyArticle to be @type:Publication
         if doc['@type'] == 'ScholarlyArticle':
             doc['@type'] = 'Publication'
 
         # make creator.affiliation an object
-        try:
+        if 'creator' in doc and isinstance(doc['creator'], list):
             for creator in doc['creator']:
-                if isinstance(creator['affiliation'], str):
+                if 'affiliation' in creator and isinstance(creator['affiliation'], str):
                     creator['affiliation'] = {
                         'name': creator['affiliation']
                     }
-        except KeyError:
-            pass
+
+        # fix fake list
+        if 'keywords' in doc and len(doc['keywords']) == 1:
+            doc['keywords'] = re.split(r', |,|; |;', doc['keywords'][0])
 
         return doc
 
