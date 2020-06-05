@@ -19,6 +19,7 @@ class ZenodoCovidUploader(CrawlerESUploader):
         "query": {
             "default_field": "all"
         },
+        "default_pipeline": "resources-common",
         "analysis": {
             "normalizer": {
                 "keyword_lowercase_normalizer": {
