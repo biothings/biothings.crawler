@@ -47,7 +47,8 @@ class ZenodoCovidUploader(CrawlerESUploader):
     @property
     def INDEX_MAPPINGS(self):
         return {
-            "properties": requests.get(MAPPING_URL).json()
+            "properties": requests.get(MAPPING_URL).json(),
+            "dynamic": False
         }
 
     def transform_doc(self, doc):
