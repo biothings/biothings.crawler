@@ -2,7 +2,7 @@
 python -m crawler.upload
        --uploader=zenodo_covid
        --src-index=crawler_zenodo_covid
-       --dest-index=outbreak-resources-zenodo"
+       --dest-index=outbreak-resources-zenodo
 """
 import re
 from datetime import datetime
@@ -61,7 +61,7 @@ class ZenodoCovidUploader(CrawlerESUploader):
         }
 
         # Force all @type:ScholarlyArticle to be @type:Publication
-        if doc['@type'] == 'ScholarlyArticle':
+        if doc.get('@type') == 'ScholarlyArticle':
             doc['@type'] = 'Publication'
 
         # make creator.affiliation an object
