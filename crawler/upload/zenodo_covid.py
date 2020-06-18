@@ -77,6 +77,13 @@ class ZenodoCovidUploader(CrawlerESUploader):
         if 'keywords' in doc and len(doc['keywords']) == 1:
             doc['keywords'] = re.split(r', |,|; |;', doc['keywords'][0])
 
+        # fix license field
+        if 'license' in doc and isinstance(doc['license'], dict):
+            if isinstance(doc['license'].get('license'), str):
+                doc['license'] = doc['license']['license']
+            else: # unsupported license object
+                doc.pop('license')
+
         return doc
 
     def extract_id(self, doc):
