@@ -1,8 +1,5 @@
 """
-python -m crawler.upload
-       --uploader=zenodo_covid
-       --src-index=crawler_zenodo_covid
-       --dest-index=outbreak-resources-zenodo
+python -m crawler.upload --uploader=zenodo_covid --src-index=crawler_zenodo_covid --dest-index=outbreak-resources-zenodo
 """
 import re
 from datetime import datetime
@@ -44,6 +41,9 @@ class ZenodoCovidUploader(CrawlerESUploader):
             }
         }
     }
+    BIOTHING_TYPE = 'resources'
+    BIOTHING_VERSION = 'c1.0'
+
     @property
     def INDEX_MAPPINGS(self):
         return {

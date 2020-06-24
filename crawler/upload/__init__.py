@@ -8,6 +8,7 @@ To make the crawled items searchable and aggregatable, reindexing is necessary.
 
 """
 
+from datetime import datetime
 import logging
 import os
 
@@ -24,10 +25,10 @@ uploaders = {
 class CrawlerESUploader:
 
     NAME = 'default'
-    
-    # # # # # # # # # # # # # # #
-    #  Quick Transform Settings #
-    # # # # # # # # # # # # # # #
+
+    #---------------------------#
+    #        Transform          #
+    #---------------------------#
 
     TRANSFORM_KEYS = {
         # "<original_field_name>": "<new_field_name>"
@@ -36,10 +37,10 @@ class CrawlerESUploader:
         # "<field_name>": lambda value: f(value)
     }
 
-    # # # # # # # # # # # # # # #
-    #  Index  Related  Settings #
-    # # # # # # # # # # # # # # #
-    
+    #---------------------------#
+    #           Index           #
+    #---------------------------#
+
     INDEX_MAPPINGS = {
         # "<field_name>": "<elasticsearch_definition>"
     }
@@ -51,11 +52,18 @@ class CrawlerESUploader:
     INDEX_FIXCONFLICTS = False
     INDEX_FIX_MAX_NUMS = 10
 
+    #---------------------------#
+    #          Metadata         #
+    #---------------------------#
+
+    BIOTHING_TYPE = 'biothing'
+    BIOTHING_VERSION = 'c1.0'
+
     def __init__(self, **kwargs):
 
+        self.metadata = DataMetadata(self)
         self.indexing = DataReindex(self, **kwargs)
         self.transform = DataTransform(self)
-        self.metadata = DataMetadata(self)
 
     def __init_subclass__(cls):
         super().__init_subclass__()
@@ -188,10 +196,15 @@ class DataReindex:
         self.dest_index = dest_index
 
         self.uploader = uploader
+
+        mappings = dict(self.uploader.INDEX_MAPPINGS)
+        mappings['_meta'] = self.uploader.metadata.get_metadata()
+
         self.indexing = CrawlerIndices(
             self.dest_client, 
-            self.uploader.INDEX_MAPPINGS, 
+            mappings, # including _meta field
             self.uploader.INDEX_SETTINGS)
+
         self._valid_indices = set()
 
     def reindex(self, query=None):
@@ -260,7 +273,22 @@ class DataMetadata:
     def __init__(self, uploader):
         self.uploader = uploader
 
-    # TODO handles the _meta field
+    def get_metadata(self):
+        return {
+            "biothing_type": self.uploader.BIOTHING_TYPE,
+            "build_date": datetime.now().isoformat(),
+            "build_version": self.uploader.BIOTHING_VERSION,
+            "src": {
+                self.uploader.NAME: {
+                    "code": {
+                        "module": self.uploader.__module__,
+                        "repo": "https://github.com/biothings/biothings.crawler"
+                    }
+                }
+            },
+        }
+
+
 
 
 class CrawlerIndices:
@@ -276,24 +304,25 @@ class CrawlerIndices:
     def index(self, _index, _id, _source, alias=None):
 
         if _index not in self._valid_indices:
-            if not self.client.indices.exists(index=_index):
-                settings = {
-                    "number_of_shards": 1,
-                    "number_of_replicas": 0
+            if self.client.indices.exists(index=_index):
+                self.client.indices.delete(index=_index)
+            settings = {
+                "number_of_shards": 1,
+                "number_of_replicas": 0
+            }
+            settings.update(self.settings)
+            request_body = {
+                "settings": {"index": settings},
+                "mappings": self.mappings,
+                "aliases": {alias: {}} if alias else {}
+            }
+            if self._es_version < 7:
+                request_body['mappings'] = {
+                    "_doc": request_body['mappings']
                 }
-                settings.update(self.settings)
-                request_body = {
-                    "settings": {"index": settings},
-                    "mappings": self.mappings,
-                    "aliases": {alias: {}} if alias else {}
-                }
-                if self._es_version < 7:
-                    request_body['mappings'] = {
-                        "_doc": request_body['mappings']
-                    }
-                self.client.indices.create(
-                    index=_index,
-                    body=request_body)
+            self.client.indices.create(
+                index=_index,
+                body=request_body)
             self._valid_indices.add(_index)
 
         return self.client.index(index=_index, id=_id, body=_source)
