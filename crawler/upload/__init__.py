@@ -232,8 +232,6 @@ class DataMetadata:
         }
 
 
-
-
 class CrawlerIndices:
 
     def __init__(self, client, mappings=None, settings=None):
@@ -270,4 +268,6 @@ class CrawlerIndices:
 
         return self.client.index(index=_index, id=_id, body=_source)
 
+
 from .zenodo_covid import ZenodoCovidUploader
+from .immport import ImmPortUploader
