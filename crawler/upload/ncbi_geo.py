@@ -1,4 +1,4 @@
-'''
+"""
     Trasnform NCBI Geo to Schema.org Structured Metadata
 
     Assume the original _id needs to be transformed
@@ -6,7 +6,7 @@
 
     'Citation(s)' field may not exist. If exist, must be str.
     May include a number, or numbers separated by ', '.
-'''
+"""
 
 ### TODO NEED TO RESTRUCTRUE
 
