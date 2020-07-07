@@ -99,7 +99,7 @@ class CrawlerESUploader:
         Modify documents after the quick transform phase.
         """
         # override here
-        raise NotImplementedError
+        return doc
 
 
 class CrawlerDatasetESUploader(CrawlerESUploader):
