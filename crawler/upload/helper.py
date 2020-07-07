@@ -29,7 +29,7 @@ def pmid_to_funding(pmid):
     Use Pubmed ID to find funding information objects
     '''
     url = "https://www.ncbi.nlm.nih.gov/pubmed/" + pmid
-    body = requests.get(url).text
+    body = requests.get(url, timeout=5).text
     pattern = '//*[@id="maincontent"]/div/div[5]/div/div/div/div//h4'
     sections = Selector(text=body).xpath(pattern)
 
@@ -108,7 +108,7 @@ def pmid_to_citation(pmid):
     Use pmid to find citation string
     '''
     url = 'https://www.ncbi.nlm.nih.gov/sites/PubmedCitation?id=' + pmid
-    body = requests.get(url).text
+    body = requests.get(url, timeout=5).text
     citation = Selector(text=body).xpath('string(/)').get()
     return citation.replace(u'\xa0', u' ')
 

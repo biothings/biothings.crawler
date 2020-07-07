@@ -183,7 +183,7 @@ class DataReindex:
             'name': 'cyclin dependent kinase 2
         }
         """
-        for doc in scan(self.src_client, index=self.src_index):
+        for doc in scan(self.src_client, index=self.src_index, scroll="5m", size=30):
             _doc = {'_id': doc['_id']}
             _doc.update(doc['_source'])
             yield _doc
