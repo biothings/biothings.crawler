@@ -11,93 +11,89 @@
         "Endpoints"
 """
 
-### TODO NEED TO RESTRUCTRUE
-
 import logging
-import time
 
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.connections import connections
-
-from helper import pmid_to_citation, pmid_to_funding, transform
-
-connections.create_connection(hosts=['su07:9199'])
+from . import CrawlerESUploader
+from .helper import pmid_to_citation, pmid_to_funding
 
 
-def PI_translation(value):
-
-    creators = []
-    for individual in value.split('; '):
-        segments = len(individual.split(" - "))
-        if segments != 2:
-            logging.warning('Cannot transform %s.', individual)
-        else:
-            creators.append({
-                "@type": "Person",
-                "name": individual.split(" - ")[0],
-                "affiliation": individual.split(" - ")[1]
-            })
-    return {
-        "creator": creators,
-    }
+# TODO: properly setup logger
 
 
-IMMPORT_MAPPINGS = {
-    "Accession": "identifier",
-    "Title": "name",
-    "Start Date": "datePublished",
-    "Detailed Description": "description",
-    "_id": "url",
-    "PI": PI_translation,
-    "Condition Studied": lambda value: {
-        "keywords": value.split(', ')
-    },  # Could possibly go into variableMeasured,
-    # but is more subjectMeasured than variable...
-    "DOI": lambda value: {
-        "sameAs": f"https://www.doi.org/{value}"
-    },
-    "Download Packages": lambda value: {
-        "distribution": [{
-            "@type": "DataDownload",
-            "contentUrl": value}]
-    },
-    "Contract/Grant": lambda value: {
-        "funder": [{
-            "@type": "Organization",
-            "name": value
-        }]
-    }
-}
+class ImmPortUploader(CrawlerESUploader):
+    NAME = 'immport'
+    BIOTHING_TYPE = 'dataset'
+    BIOTHING_VERSION = 'c1.0'
 
+    # keep default settings
+    # INDEX_SETTINGS = {}
+    # INDEX_MAPPINGS = {}
 
-def main():
-    client = connections.get_connection()
-    search = Search(index='immport')
+    # _id is not transformed
 
-    for doc in search.params(scroll='1d').scan():
+    @staticmethod
+    def pi_translation(value):
 
-        _id = doc.meta.id
-        dic = doc.to_dict()
+        creators = []
+        for individual in value.split('; '):
+            segments = len(individual.split(" - "))
+            if segments != 2:
+                logging.warning('Cannot transform %s.', individual)
+            else:
+                creators.append({
+                    "@type": "Person",
+                    "name": individual.split(" - ")[0],
+                    "affiliation": individual.split(" - ")[1]
+                })
+        return {
+            "creator": creators,
+        }
 
-        logging.info('%s', _id)
-
-        try:
-            doc = transform(dic, IMMPORT_MAPPINGS)
-        except Exception as e:
-            logging.warning(e)
-
-        metadata = {
+    def transform_doc(self, doc):
+        # In this implementation, most transforms are done using
+        # the helper functions from the `TransformDoc` class.
+        #
+        # As shown afterwards, this can also mix and match with updating
+        # the document directly.
+        doc.transform_keys_values({
+            "PI": self.pi_translation,
+            "Condition Studied": lambda value: {
+                "keywords": value.split(', ')
+            },  # Could possibly go into variableMeasured,
+            # but is more subjectMeasured than variable...
+            "DOI": lambda value: {
+                "sameAs": f"https://www.doi.org/{value}"
+            },
+            "Download Packages": lambda value: {
+                "distribution": [{
+                    "@type": "DataDownload",
+                    "contentUrl": value}]
+            },
+            "Contract/Grant": lambda value: {
+                "funder": [{
+                    "@type": "Organization",
+                    "name": value
+                }]
+            }
+        }, ignore_key_error=True).rename_keys({
+            "Accession": "identifier",
+            "Title": "name",
+            "Start Date": "datePublished",
+            "Detailed Description": "description",
+            "_id": "url",
+        }, ignore_key_error=True).update({
+            "@context": "http://schema.org/",
+            "@type": "Dataset",
             "includedInDataCatalog": {
                 "@type": "DataCatalog",
                 "name": "ImmPort",
                 "url": "http://immport.org/"
             }
-        }
-        doc.update(metadata)
+        }).delete_unused_keys()
 
         try:
             funding = []
-            for pmid in dic.get('Pubmed Id', []):
+            for pmid in doc.get('Pubmed Id', []):
                 funding += pmid_to_funding(pmid)
         except Exception as e:
             logging.warning(e)
@@ -107,7 +103,7 @@ def main():
 
         try:
             citations = []
-            for pmid in dic.get('Pubmed Id', []):
+            for pmid in doc.get('Pubmed Id', []):
                 citations.append(pmid_to_citation(pmid))
         except Exception as e:
             logging.warning(e)
@@ -115,10 +111,4 @@ def main():
             if citations:
                 doc['citation'] = citations
 
-        client.index(index='immport_transformed', id=_id, body=doc)
-        time.sleep(0.2)  # throttle request rates
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    main()
+        return dict(sorted(doc.items()))

@@ -11,9 +11,12 @@ To make the crawled items searchable and aggregatable, reindexing is necessary.
 from datetime import datetime
 import logging
 import os
+from typing import Union
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import reindex, scan
+
+from .tdoc import TransformDoc
 
 
 uploaders = {
@@ -25,17 +28,6 @@ uploaders = {
 class CrawlerESUploader:
 
     NAME = 'default'
-
-    #---------------------------#
-    #        Transform          #
-    #---------------------------#
-
-    TRANSFORM_KEYS = {
-        # "<original_field_name>": "<new_field_name>"
-    }
-    TRANSFORM_VALUES = {
-        # "<field_name>": lambda value: f(value)
-    }
 
     #---------------------------#
     #           Index           #
@@ -60,10 +52,8 @@ class CrawlerESUploader:
     BIOTHING_VERSION = 'c1.0'
 
     def __init__(self, **kwargs):
-
         self.metadata = DataMetadata(self)
         self.indexing = DataReindex(self, **kwargs)
-        self.transform = DataTransform(self)
 
     def __init_subclass__(cls):
         super().__init_subclass__()
@@ -75,22 +65,14 @@ class CrawlerESUploader:
         This is primarily how to interact with this class.
         """
         # reindex as-is
-        if not any((
-            self.TRANSFORM_KEYS,
-            self.TRANSFORM_VALUES,
-            self.INDEX_MAPPINGS
-        )) and all((
-            self.extract_id is CrawlerESUploader.extract_id,
-            self.transform_doc is CrawlerESUploader.transform_doc
-        )):
+        if not self.INDEX_MAPPINGS and self.extract_id is CrawlerESUploader.extract_id:
             self.indexing.reindex()
             return
 
         # apply transformation
         for doc in self.indexing.scan():
             _id = self.extract_id(doc)
-            _source = self.transform.quick_transform(doc)
-            _source = self.transform_doc(_source)
+            _source = self.transform_doc(TransformDoc(doc))
             self.indexing.index(_id, _source)
 
     def extract_id(self, doc):
@@ -112,7 +94,7 @@ class CrawlerESUploader:
         """
         return doc.pop('_id', None)
 
-    def transform_doc(self, doc):
+    def transform_doc(self, doc: TransformDoc) -> dict:
         """
         Modify documents after the quick transform phase.
         """
@@ -133,45 +115,6 @@ class CrawlerDatasetESUploader(CrawlerESUploader):
         }
         base.update(doc)
         return base
-
-
-class DataTransform:
-
-    def __init__(self, uploader):
-        self.uploader = uploader
-
-    def quick_transform(self, doc):
-        """
-        Apply dictionay key, value transformations.
-        Find transformation settings in the uploader instance.
-        """
-        doc = self._transform_names(doc, self.uploader.TRANSFORM_KEYS)
-        doc = self._transform_values(doc, self.uploader.TRANSFORM_VALUES)
-        return doc
-
-    def schema_transform(self, doc):
-        # the method above is to modify the original document,
-        # this could be by defining how the new one should look,
-        # ideally the definition in this manner is more readable.
-        raise NotImplementedError()
-
-    def _transform_names(self, doc, mappings):
-        _doc = {}
-        for key in doc:
-            if key in mappings:
-                _doc[mappings[key]] = doc[key]
-            else:
-                _doc[key] = doc[key]
-        return _doc
-
-    def _transform_values(self, doc, mapping_funcs):
-        _doc = {}
-        for key in doc:
-            if key in mapping_funcs:
-                _doc[key] = mapping_funcs[key](_doc[key])
-            else:
-                _doc[key] = doc[key]
-        return _doc
 
 
 class DataReindex:
@@ -240,7 +183,7 @@ class DataReindex:
             'name': 'cyclin dependent kinase 2
         }
         """
-        for doc in scan(self.src_client, index=self.src_index):
+        for doc in scan(self.src_client, index=self.src_index, scroll="5m", size=30):
             _doc = {'_id': doc['_id']}
             _doc.update(doc['_source'])
             yield _doc
@@ -289,8 +232,6 @@ class DataMetadata:
         }
 
 
-
-
 class CrawlerIndices:
 
     def __init__(self, client, mappings=None, settings=None):
@@ -327,4 +268,7 @@ class CrawlerIndices:
 
         return self.client.index(index=_index, id=_id, body=_source)
 
+
 from .zenodo_covid import ZenodoCovidUploader
+from .immport import ImmPortUploader
+from .ncbi_geo import NCBIGeoUploader
