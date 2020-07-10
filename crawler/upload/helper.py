@@ -1,5 +1,5 @@
-import os
-import xml.etree.ElementTree as ET
+from typing import Optional, Tuple, List
+import xml.etree.ElementTree as ElementTree
 
 import requests
 from scrapy.selector import Selector
@@ -112,15 +112,24 @@ def pmid_to_citation(pmid):
     citation = Selector(text=body).xpath('string(/)').get()
     return citation.replace(u'\xa0', u' ')
 
-EUTILS_URL_TEMPLATE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={id}&retmode=xml&api_key={api_key}"
 
-def pmid_with_eutils(pmid):
-    '''
-    Use pmid to retrieve both citation and funding info
-    '''
-    url = EUTILS_URL_TEMPLATE.format(id=pmid, api_key=os.environ['API_KEY'])
-    body = requests.get(url).text
-    root = ET.fromstring(body)
+def get_funding_cite_from_eutils(pmid: str, api_key: Optional[str] = None) -> Tuple[List[str], str]:
+    """Use pmid to retrieve both citation and funding info
+
+    :param pmid: PubMed PMID
+    :param api_key: API Key from NCBI to access E-utilities
+    :return: A list of GrantIDs and a string for Citation
+    """
+    base_api_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+    parameters = {
+        'db': 'pubmed',
+        'id': str(pmid),
+        'retmode': 'xml'
+    }
+    if api_key is not None:
+        parameters.update({'api_key': api_key})
+    body = requests.get(base_api_url, params=parameters).text
+    root = ElementTree.fromstring(body)
 
     assert root
 
@@ -145,8 +154,7 @@ def pmid_with_eutils(pmid):
     # citation field
     citation = ''
 
-    ## author string
-
+    # author string
     authors = []
     for author in root.findall('.//Author'):
         lastname = author.find('LastName').text
@@ -159,7 +167,7 @@ def pmid_with_eutils(pmid):
         citation += string
 
     elif len(authors) > 1:
-        string =  ', '.join(authors)
+        string = ', '.join(authors)
         string += '. '
         citation += string
 
@@ -167,8 +175,7 @@ def pmid_with_eutils(pmid):
         citation += authors[0]
         citation += '. '
 
-    ## the remaining string
-
+    # the remaining string
     features = (
         ('.//MedlineCitation/Article/ArticleTitle', '{} '),
         ('.//MedlineCitation/MedlineJournalInfo/MedlineTA', '{} '),
@@ -185,9 +192,3 @@ def pmid_with_eutils(pmid):
             citation += template.format(text)
 
     return grants, citation
-
-
-
-# pprint(pmid_to_funder("20109744"))
-# print(pmid_to_citation("20109744"))
-# print(pmid_with_eutils("20109744"))
