@@ -120,6 +120,7 @@ def get_funding_cite_from_eutils(pmid: str, api_key: Optional[str] = None) -> Tu
     :param api_key: API Key from NCBI to access E-utilities
     :return: A list of GrantIDs and a string for Citation
     """
+    # TODO: The API endpoint supports batch querying, and we aren't using it.
     base_api_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
     parameters = {
         'db': 'pubmed',
