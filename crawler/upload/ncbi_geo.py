@@ -72,6 +72,8 @@ class NCBIGeoUploader(CrawlerESUploader):
         doc.update(meta)
 
         if 'Citation(s)' in doc:
+            # TODO: consider using pmid_to_citation() for citations or fix the formatting from
+            #  get_funding_cite_from_eutils to match
             funding = []
             citations = []
             if 'API_KEY' in os.environ:
