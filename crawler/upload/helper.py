@@ -50,7 +50,7 @@ def get_funding_cite_from_eutils(pmid: str, api_key: Optional[str] = None) -> Tu
     }
     if api_key is not None:
         parameters.update({'api_key': api_key})
-    body = requests.get(base_api_url, params=parameters).text
+    body = requests.get(base_api_url, params=parameters, timeout=15).text
     root = ElementTree.fromstring(body)
 
     assert root
