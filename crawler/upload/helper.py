@@ -74,6 +74,7 @@ def get_funding_cite_from_eutils(pmid: str, api_key: Optional[str] = None) -> Tu
             grants.append(grant)
 
     # citation field
+    # ANSI/NISO Z39.29-2005 (R2010), I don't have time to implement the full specs, and I cannot find any library
     citation = ''
 
     # author string
@@ -98,19 +99,35 @@ def get_funding_cite_from_eutils(pmid: str, api_key: Optional[str] = None) -> Tu
         citation += '. '
 
     # the remaining string
-    features = (
+    # func. to build string
+    def construct_cite_partial(xml, features):
+        partial_cite = ''
+        for feature, template in features:
+            if xml.find(feature) is not None:
+                text = xml.find(feature).text
+                partial_cite += template.format(text)
+        return partial_cite
+
+    citation += construct_cite_partial(root, (
         ('.//MedlineCitation/Article/ArticleTitle', '{} '),
-        ('.//MedlineCitation/MedlineJournalInfo/MedlineTA', '{} '),
-        ('.//MedlineCitation/Article/Journal/JournalIssue/PubDate/Year', '{} '),
-        ('.//MedlineCitation/Article/Journal/JournalIssue/PubDate/Month', '{};'),
+        ('.//MedlineCitation/MedlineJournalInfo/MedlineTA', '{}'),
+    ))
+    journal_date_base = './/MedlineCitation/Article/Journal/JournalIssue/PubDate/'
+    for p in ['Year', 'Month', 'Day']:
+        if root.find(journal_date_base + p) is not None:
+            text = root.find(journal_date_base + p).text  # TODO: after 3.8, use the Walrus operator so it's cleaner
+            # The space is added BEFORE the date, so the previous space was removed
+            citation += f' {text}'
+        else:
+            # If we can't find more date fields, end
+            break
+    citation += ';'  # add the semicolon
+
+    citation += construct_cite_partial(root, (
         ('.//MedlineCitation/Article/Journal/JournalIssue/Volume', '{}'),
         ('.//MedlineCitation/Article/Journal/JournalIssue/Issue', '({})'),
-        ('.//MedlineCitation/Article/Pagination/MedlinePgn', ':{}'),
-    )
-
-    for feature, template in features:
-        if root.find(feature) is not None:
-            text = root.find(feature).text
-            citation += template.format(text)
+        ('.//MedlineCitation/Article/Pagination/MedlinePgn', ':{}.'),
+        ('.//MedlineCitation/PMID', ' PMID: {}')
+    ))
 
     return grants, citation
