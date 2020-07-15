@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional, Tuple, List, Iterable, Dict
 import xml.etree.ElementTree as ElementTree
 
@@ -42,6 +43,9 @@ def batch_get_pmid_eutils(pmids: Iterable[str], timeout: float, api_key: Optiona
     :param api_key: API Key from NCBI to access E-utilities
     :return: A dictionary containing pmids and the corresponding dictionary with citation and grant info.
     """
+    # warn if got a single str
+    if pmids is str:
+        warnings.warn(f"Got str:{pmids} as parameter, expecting an Iterable of str", RuntimeWarning)
     base_api_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
     parameters = {
         'db': 'pubmed',
@@ -84,9 +88,22 @@ def batch_get_pmid_eutils(pmids: Iterable[str], timeout: float, api_key: Optiona
         # author string
         authors = []
         for author in pubmed_article.findall('.//Author'):
-            lastname = author.find('LastName').text
-            initials = author.find('Initials').text
-            authors.append(f"{lastname} {initials}")
+            # Check for ValidYN==Y attribute
+            # Mostly articles with errata in Authors field
+            # see PMID: 16155929, 16202713, 17371979, 18047569, etc.
+            valid = author.attrib.get('ValidYN', 'Y')
+            if valid == 'N':
+                continue
+            if author.find('LastName') is not None:
+                names = [author.find('LastName').text, author.find('Initials').text]
+                if author.find('Suffix') is not None:
+                    names.append(author.find('Suffix').text)
+                authors.append(" ".join(names))
+            elif author.find('CollectiveName') is not None:
+                # Has a dot at the end, see PMID:17571346
+                authors.append(author.find('CollectiveName').text + '.')
+            else:
+                warnings.warn(f"Unable to process an author in when handling PMID:{pmid}", RuntimeWarning)
 
         if len(authors) > 4:
             string = ', '.join(authors[:4])
@@ -101,28 +118,51 @@ def batch_get_pmid_eutils(pmids: Iterable[str], timeout: float, api_key: Optiona
         elif len(authors) == 1:
             citation += authors[0]
             citation += '. '
-
+        # See PMID:20703210
+        elif len(authors) == 0:
+            citation += "[No authors listed] "
+        else:
+            pass  # unreachable
+        # FIXME: Does not handle elements with tags inside
+        #  Like having <i>more text</i>, see PMID:28289389 for example.
         citation += construct_cite_partial(pubmed_article, (
             ('.//MedlineCitation/Article/ArticleTitle', '{} '),
             ('.//MedlineCitation/MedlineJournalInfo/MedlineTA', '{}'),
         ))
-        journal_date_base = './/MedlineCitation/Article/Journal/JournalIssue/PubDate/'
-        for p in ['Year', 'Month', 'Day']:
-            if pubmed_article.find(journal_date_base + p) is not None:
-                text = pubmed_article.find(
-                    journal_date_base + p).text  # TODO: after 3.8, use the Walrus operator so it's cleaner
-                # The space is added BEFORE the date, so the previous space was removed
-                citation += f' {text}'
-            else:
-                # If we can't find more date fields, end
-                break
+        pubdate = pubmed_article.find('.//MedlineCitation/Article/Journal/JournalIssue/PubDate')
+        # There are lots of ways to express the date, so far I have seen:
+        #   - Year, Month, Day
+        #   - Year, Month
+        #   - Year, Season
+        #   - MedlineDate
+        # So far concatenating everything seems to produce desirable results
+        month_abbr = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        if pubdate is not None:
+            date_texts = []
+            for elem in pubdate:
+                if elem.tag == 'Day':
+                    # deal with days that begin with 0
+                    date_texts.append(str(int(elem.text)))
+                elif elem.tag == 'Month':
+                    # deal with months that are numbers
+                    if elem.text.isdigit():
+                        date_texts.append(month_abbr[int(elem.text)])
+                    else:
+                        date_texts.append(elem.text)
+                else:
+                    date_texts.append(elem.text)
+            if len(date_texts) > 0:
+                citation += " " + " ".join(date_texts)
         citation += ';'  # add the semicolon
 
         citation += construct_cite_partial(pubmed_article, (
             ('.//MedlineCitation/Article/Journal/JournalIssue/Volume', '{}'),
             ('.//MedlineCitation/Article/Journal/JournalIssue/Issue', '({})'),
-            ('.//MedlineCitation/Article/Pagination/MedlinePgn', ':{}.'),
-            ('.//MedlineCitation/PMID', ' PMID: {}')
+            ('.//MedlineCitation/Article/Pagination/MedlinePgn', ':{}'),
+        ))
+        citation += '.'
+        citation += construct_cite_partial(pubmed_article, (
+            ('.//MedlineCitation/PMID', ' PMID: {}'),
         ))
         ret[pmid] = {
             'grants': grants,
