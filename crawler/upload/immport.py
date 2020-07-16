@@ -16,7 +16,7 @@ import time
 import logging
 
 from . import CrawlerESUploader
-from .helper import get_funding_cite_from_eutils
+from .helper import batch_get_pmid_eutils
 
 
 # TODO: properly setup logger
@@ -99,14 +99,16 @@ class ImmPortUploader(CrawlerESUploader):
             api_key = os.environ['API_KEY']
         else:
             api_key = None
-        for pmid in doc.get('Pubmed Id', []):
-            pmid = pmid.strip()
-            grants, citation = get_funding_cite_from_eutils(pmid, api_key)
-            # throttle request rates, NCBI says up to 10 requests per second with API Key, 3/s without.
-            if api_key is not None:
-                time.sleep(0.1)
-            else:
-                time.sleep(0.35)
+        pmids = [pmid.strip() for pmid in doc.get('Pubmed Id', [])]
+        eutils_info = batch_get_pmid_eutils(pmids, timeout=15.0, api_key=api_key)
+        # throttle request rates, NCBI says up to 10 requests per second with API Key, 3/s without.
+        if api_key is not None:
+            time.sleep(0.1)
+        else:
+            time.sleep(0.35)
+        for pmid in pmids:
+            grants = eutils_info[pmid]['grants']
+            citation = eutils_info[pmid]['citation']
             funding += grants
             citations.append(citation)
         if funding:
