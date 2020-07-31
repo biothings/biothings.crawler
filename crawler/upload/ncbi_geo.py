@@ -8,13 +8,11 @@
     May include a number, or numbers separated by ', '.
 """
 
-
-import logging
 import os
 import time
 
 from . import CrawlerESUploader
-from .helper import pmid_to_citation, pmid_to_funding, pmid_with_eutils
+from .helper import batch_get_pmid_eutils
 
 
 class NCBIGeoUploader(CrawlerESUploader):
@@ -74,43 +72,29 @@ class NCBIGeoUploader(CrawlerESUploader):
         doc.update(meta)
 
         if 'Citation(s)' in doc:
+            funding = []
+            citations = []
             if 'API_KEY' in os.environ:
-                funding = []
-                citations = []
-                for pmid in doc['Citation(s)'].split(','):
-                    pmid = pmid.strip()
-                    grants, citation = pmid_with_eutils(pmid)
-                    funding += grants
-                    citations.append(citation)
-                if funding:
-                    doc['funding'] = funding
-                if citations:
-                    doc['citation'] = citations
-                time.sleep(0.1)  # throttle request rates
+                api_key = os.environ['API_KEY']
             else:
-                ### Add funding field ###
-                try:
-                    funding = []
-                    for pmid in doc['Citation(s)'].split(','):
-                        pmid = pmid.strip()
-                        funding += pmid_to_funding(pmid)
-                except Exception as e:
-                    logging.warning(e)
-                else:
-                    if funding:
-                        doc['funding'] = funding
-                ### Add citation field ###
-                try:
-                    citations = []
-                    for pmid in doc['Citation(s)'].split(','):
-                        pmid = pmid.strip()
-                        citations.append(pmid_to_citation(pmid))
-                except Exception as e:
-                    logging.warning(e)
-                else:
-                    if citations:
-                        doc['citation'] = citations
-                time.sleep(0.2)  # throttle request rates
+                api_key = None
+            pmids = [pmid.strip() for pmid in doc['Citation(s)'].split(',')]
+            eutils_info = batch_get_pmid_eutils(pmids, timeout=15.0, api_key=api_key)
+            # throttle request rates, NCBI says up to 10 requests per second with API Key, 3/s without.
+            if api_key is not None:
+                time.sleep(0.1)
+            else:
+                time.sleep(0.35)
+            for pmid in pmids:
+                grants = eutils_info[pmid]['grants']
+                citation = eutils_info[pmid]['citation']
+                funding += grants
+                citations.append(citation)
+            if funding:
+                doc['funding'] = funding
+            if citations:
+                doc['citation'] = citations
+
         doc.delete_unused_keys()
         return doc
 

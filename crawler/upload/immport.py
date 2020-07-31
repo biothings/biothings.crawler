@@ -11,10 +11,12 @@
         "Endpoints"
 """
 
+import os
+import time
 import logging
 
 from . import CrawlerESUploader
-from .helper import pmid_to_citation, pmid_to_funding
+from .helper import batch_get_pmid_eutils
 
 
 # TODO: properly setup logger
@@ -89,26 +91,30 @@ class ImmPortUploader(CrawlerESUploader):
                 "name": "ImmPort",
                 "url": "http://immport.org/"
             }
-        }).delete_unused_keys()
+        })
 
-        try:
-            funding = []
-            for pmid in doc.get('Pubmed Id', []):
-                funding += pmid_to_funding(pmid)
-        except Exception as e:
-            logging.warning(e)
+        funding = []
+        citations = []
+        if 'API_KEY' in os.environ:
+            api_key = os.environ['API_KEY']
         else:
-            if funding:
-                doc['funding'] = funding
-
-        try:
-            citations = []
-            for pmid in doc.get('Pubmed Id', []):
-                citations.append(pmid_to_citation(pmid))
-        except Exception as e:
-            logging.warning(e)
+            api_key = None
+        pmids = [pmid.strip() for pmid in doc.get('Pubmed Id', [])]
+        eutils_info = batch_get_pmid_eutils(pmids, timeout=15.0, api_key=api_key)
+        # throttle request rates, NCBI says up to 10 requests per second with API Key, 3/s without.
+        if api_key is not None:
+            time.sleep(0.1)
         else:
-            if citations:
-                doc['citation'] = citations
+            time.sleep(0.35)
+        for pmid in pmids:
+            grants = eutils_info[pmid]['grants']
+            citation = eutils_info[pmid]['citation']
+            funding += grants
+            citations.append(citation)
+        if funding:
+            doc['funding'] = funding
+        if citations:
+            doc['citation'] = citations
 
+        doc.delete_unused_keys()
         return dict(sorted(doc.items()))
