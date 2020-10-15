@@ -14,6 +14,7 @@
 import os
 import time
 import logging
+from datetime import datetime
 
 from . import CrawlerESUploader
 from .helper import batch_get_pmid_eutils
@@ -57,6 +58,14 @@ class ImmPortUploader(CrawlerESUploader):
         #
         # As shown afterwards, this can also mix and match with updating
         # the document directly.
+
+        doc['curatedBy'] = {
+            '@type': 'Organization',
+            'curationDate': datetime.now().strftime('%Y-%m-%d'),
+            'name': 'ImmPort',
+            'url': f"https://www.immport.org/shared/study/{doc['Accession']}",
+        }
+
         doc.transform_keys_values({
             "PI": self.pi_translation,
             "Condition Studied": lambda value: {
