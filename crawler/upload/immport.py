@@ -116,6 +116,10 @@ class ImmPortUploader(CrawlerESUploader):
         else:
             time.sleep(0.35)
         for pmid in pmids:
+            if pmid not in eutils_info:
+                continue  # somehow there could be malformed IDs
+                # see SDY1655 on Oct 18, 2020 ~ 3:00PM PDT
+                # available on the wayback machine
             grants = eutils_info[pmid]['grants']
             citation = eutils_info[pmid]['citation']
             funding += grants
