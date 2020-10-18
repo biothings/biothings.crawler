@@ -8,6 +8,9 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 # patch PATH so local venv is in PATH
 bin_path = os.path.join(os.getcwd(), 'venv/bin')
 os.environ['PATH'] += os.pathsep + bin_path
+# patch PATH so interpreter dir is also in PATH
+os.environ['PATH'] += os.pathsep + \
+                      os.path.abspath(os.path.dirname(sys.executable))
 
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -36,12 +39,13 @@ os.environ['ES_HOST'] = crawler_host
 process = CrawlerProcess(get_project_settings())
 process.crawl('immport_covid')
 process.start()
+process.join()
 
 # FIXME: this is a hack to wait for reindex without forcing it
 time.sleep(15)
 
 # upload
-uploader = uploaders['immport'](
+uploader = uploaders['immport_covid'](
     src_host=crawler_host,
     src_index=crawler_index,
     dest_host=uploader_host,
