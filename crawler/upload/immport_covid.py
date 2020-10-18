@@ -1,7 +1,13 @@
 import copy
+import requests
 
 from .immport import ImmPortUploader
-from .zenodo_covid import ZenodoCovidUploader
+from .zenodo_covid import ZenodoCovidUploader, MAPPING_URL
+
+_mapping = {
+            "properties": requests.get(MAPPING_URL).json(),
+            "dynamic": False
+        }
 
 
 class ImmPortCovidUploader(ImmPortUploader):
@@ -9,7 +15,7 @@ class ImmPortCovidUploader(ImmPortUploader):
     # override default settings
     # duplicate the Zenodo ones, as they are the same
     INDEX_SETTINGS = copy.deepcopy(ZenodoCovidUploader.INDEX_SETTINGS)
-    INDEX_MAPPINGS = copy.deepcopy(ZenodoCovidUploader.INDEX_MAPPINGS)
+    INDEX_MAPPINGS = copy.deepcopy(_mapping)
 
     def transform_doc(self, doc):
         doc = super(ImmPortCovidUploader, self).transform_doc(doc)
