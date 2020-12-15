@@ -113,6 +113,7 @@ def perform_crawl_and_update(
     uploader.upload()
     # update alias
     alias_switcheroo(es_uploader, alias_name, es_idx_u)
+    es_crawler.indices.delete(es_idx_c)
 
 
 if __name__ == '__main__':
