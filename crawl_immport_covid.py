@@ -116,6 +116,7 @@ def perform_crawl_and_update(
 
 
 if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
     # load environment
     scrapy_settings = get_project_settings()
     spiders = SpiderLoader.from_settings(scrapy_settings).list()
@@ -177,7 +178,6 @@ if __name__ == '__main__':
         pass
 
     for k, v in tasks.items():
-        multiprocessing.set_start_method('spawn')
         p = multiprocessing.Process(target=perform_crawl_and_update,
                                     kwargs=v)
         print(f"Executing {k} ...")
