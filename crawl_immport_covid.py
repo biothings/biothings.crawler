@@ -89,8 +89,8 @@ def perform_crawl_and_update(
         flag = True
         while flag:
             u = uuid.uuid1()
-            tmp_idx_c = f"crawler_immport_covid_{u.hex}"
-            tmp_idx_u = f"uploader_immport_covid_{u.hex}"
+            tmp_idx_c = f"crawler_{crawler}_{u.hex}"
+            tmp_idx_u = f"uploader_{uploader}_{u.hex}"
             flag1 = es_crawler.indices.exists(tmp_idx_c) and es_idx_c is None
             flag2 = es_uploader.indices.exists(tmp_idx_u) and es_idx_u is None
             flag = flag1 or flag2  # both idx names: set or not already exist
