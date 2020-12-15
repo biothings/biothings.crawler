@@ -3,6 +3,7 @@ import requests
 
 from .immport import ImmPortUploader
 from .zenodo_covid import ZenodoCovidUploader, MAPPING_URL
+from .tdoc import TransformDoc
 
 _mapping = {
             "properties": requests.get(MAPPING_URL).json(),
@@ -19,6 +20,7 @@ class ImmPortCovidUploader(ImmPortUploader):
 
     def transform_doc(self, doc):
         doc = super(ImmPortCovidUploader, self).transform_doc(doc)
+        doc = TransformDoc(doc)
         # make creator.affiliation an object
         # FIXME: copy paste from zenodo_covid for now
         if 'creator' in doc and isinstance(doc['creator'], list):

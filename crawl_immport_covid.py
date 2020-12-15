@@ -152,6 +152,7 @@ if __name__ == '__main__':
     tasks = {}
     if args.action == 'runyaml':
         with open(args.yaml) as f:
+            # FIXME: fix path problem
             config = yaml.load(f, Loader=yaml.FullLoader)
         for k, v in config.items():
             task = {
