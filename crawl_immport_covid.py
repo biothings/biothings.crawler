@@ -1,4 +1,5 @@
 import datetime
+import multiprocessing
 import os
 import uuid
 import sys
@@ -176,5 +177,10 @@ if __name__ == '__main__':
         pass
 
     for k, v in tasks.items():
+        multiprocessing.set_start_method('spawn')
+        p = multiprocessing.Process(target=perform_crawl_and_update,
+                                    kwargs=v)
         print(f"Executing {k} ...")
-        perform_crawl_and_update(**v)
+        p.start()
+        p.join()
+
