@@ -84,7 +84,7 @@ class ZenodoCovidUploader(CrawlerESUploader):
             else: # unsupported license object
                 doc.pop('license')
         # remove citation field
-        doc.delete_keys('citation')
+        doc.delete_keys(['citation'])
         return doc
 
     def extract_id(self, doc):
