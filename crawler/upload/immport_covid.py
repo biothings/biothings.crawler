@@ -31,5 +31,5 @@ class ImmPortCovidUploader(ImmPortUploader):
                         'name': creator['affiliation']
                     }
         # remove citation field
-        doc.delete_keys('citation')
+        doc.delete_keys(['citation'])
         return doc

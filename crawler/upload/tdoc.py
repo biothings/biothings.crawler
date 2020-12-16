@@ -53,18 +53,18 @@ class TransformDoc(dict):
                     raise e
         return self
 
-    def delete_keys(self, keys: Union[str, Iterable[str]], ignore_key_error: bool = True) -> 'TransformDoc':
+    def delete_keys(self, keys: Iterable[str], ignore_key_error: bool = True) -> 'TransformDoc':
         """Delete keys in a document, returning itself.
 
         Args:
-            keys: a single key name or list of key names to delete.
+            keys: Key names to delete. If only one key, enclose in a list.
             ignore_key_error: Whether this method ignores when keys does not exist, or raises `KeyError`.
                 Defaults to True, will NOT raise `KeyError` when key does not exist.
 
         Returns:
             Same instance of `TransformDoc` with specified keys removed.
         """
-        for key in list(keys):
+        for key in keys:
             try:
                 del self[key]
             except KeyError as e:
