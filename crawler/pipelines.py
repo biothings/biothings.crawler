@@ -42,6 +42,8 @@ class ESPipeline:
         """
 
         _id = item.pop('_id', item.get('@id'))
+
+        # FIXME: ES only allows lowercase
         _index = os.getenv('ES_INDEX', 'crawler_' + spider.name)
 
         res = indices.index(_index, _id, item)
