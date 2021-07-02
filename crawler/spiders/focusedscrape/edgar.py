@@ -7,7 +7,7 @@ from ..helper import JsonLdMixin
 
 
 class EdgarSpider(CrawlSpider, JsonLdMixin):
-    name = 'eDGAR'
+    name = 'edgar'
     allowed_domains = ['edgar.biocomp.unibo.it']
     start_urls = [
         'http://edgar.biocomp.unibo.it/cgi-bin/gene_disease_db/main_table.py',
