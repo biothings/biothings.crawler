@@ -33,8 +33,8 @@ class ZenodoCovidSpider(Spider, JsonLdMixin):
 
     def parse(self, response):
 
-        response = json.loads(response.body)
-        hits = response['hits']['hits']
+        res_doc = json.loads(response.body)
+        hits = res_doc['hits']['hits']
         total = len(hits)
 
         for index, hit in enumerate(hits):
@@ -57,3 +57,12 @@ class ZenodoCovidSpider(Spider, JsonLdMixin):
                         '_id': url
                     }
                 )
+
+        # follow next page
+        try:
+            next_page = res_doc['links']['next']
+            logging.info('next page: %s', next_page)
+            yield response.follow(next_page)
+        except KeyError:
+            logging.info('no more pages.')
+            return None

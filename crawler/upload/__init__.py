@@ -271,4 +271,5 @@ class CrawlerIndices:
 
 from .zenodo_covid import ZenodoCovidUploader
 from .immport import ImmPortUploader
+from .immport_covid import ImmPortCovidUploader
 from .ncbi_geo import NCBIGeoUploader
