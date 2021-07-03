@@ -8,6 +8,8 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import os
+
 
 BOT_NAME = 'biothings_crawler'
 
@@ -94,3 +96,17 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+# Selenium settings
+SELENIUM_DRIVER_NAME = 'chrome'
+# basically put chromedriver under $PROJ_DIR/venv/bin
+# and make a symlink to google-chrome at the same location
+SELENIUM_DRIVER_EXECUTABLE_PATH = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, 'venv', 'bin', 'chromedriver')
+)
+# chrome: '--headless'; firefox: '-headless'
+SELENIUM_DRIVER_ARGUMENTS=['--headless']
+SELENIUM_BROWSER_EXECUTABLE_PATH = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), os.path.pardir, 'venv', 'bin', 'google-chrome')
+)

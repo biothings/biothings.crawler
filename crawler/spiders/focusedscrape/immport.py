@@ -13,12 +13,15 @@
     More on https://github.com/biothings/biothings.crawler/issues/1
 '''
 
-import csv
-
+import requests
 import scrapy
+from scrapy_selenium import SeleniumRequest
+from selenium.webdriver.support.expected_conditions import title_is
+
+from ..helper import JsonLdMixin
 
 
-class ImmPortSpider(scrapy.Spider):
+class ImmPortSpider(scrapy.Spider, JsonLdMixin):
     """
     Crawl ImmPort with Selenium
 
@@ -31,54 +34,37 @@ class ImmPortSpider(scrapy.Spider):
     name = 'immport'
     custom_settings = {
         'DOWNLOADER_MIDDLEWARES': {
-            'crawler.middlewares.SeleniumChromeDownloaderMiddleware': 543,
+            'scrapy_selenium.SeleniumMiddleware': 800,
         }
     }
+    immport_search_payload = {'pageSize': 1000}
+
 
     def start_requests(self):
-
-        # assume ImmPort.txt is in the same folder
-        with open(__file__[:-3] + '.txt', 'r') as f:
-            reader = csv.reader(f, delimiter='\t')
-            ids = [row[0] for row in reader][1:]
+        base_url = "https://www.immport.org/shared/data/query/search?term="
+        try:
+            j = requests.get(base_url, timeout=5,
+                             params=self.immport_search_payload,).json()
+            ids = [h['_id'] for h in j['hits']['hits']]
+        except requests.exceptions.Timeout:
+            # catch the rather harmless exception, and do nothing
+            ids = []
+            self.logger.warning("Timeout searching ImmPort IDs")
 
         prefix = "https://www.immport.org/shared/study/"
         for id_ in ids:
-            yield scrapy.Request(prefix + id_)
+            # FIXME: the explicit wait condition can break any day
+            #  but on the bright side, it only makes crawling extremely slow.
+            #  If you're run into issues into future, adjust the wait conditions
+            yield SeleniumRequest(
+                url=prefix + id_,
+                callback=self.extract_jsonld,
+                wait_time=10,
+                wait_until=title_is("Study Detail")
+            )
 
-    def parse(self, response):
-
-        data = {'_id': response.url}
-        sections = response.xpath('//*[@id="ui-tabpanel-0"]/p-accordion/div/p-accordiontab')
-
-        for section in sections:
-
-            title = section.xpath('./div[1]//span/text()').get()
-
-            if 'Summary' in title:
-                rows = section.xpath('./div[2]/div/table/tbody/tr')
-                for row in rows:
-                    key = row.xpath('./td[1]/text()').get()
-                    if key == 'Download Packages':
-                        value = row.xpath('./td[2]/a').attrib.get('href')
-                    else:
-                        value = row.xpath('string(./td[2])').get()
-                    data[key] = value
-
-            elif 'Publications' in title:
-                pmids = section.xpath(
-                    './div[2]/div/p-table/div/div/table/tbody/tr/td[1]/a/text()').getall()
-                if pmids:
-                    data['Pubmed Id'] = pmids
-
-            elif 'Study Links' in title:
-                pass
-
-            elif 'Glossary' in title:
-                pass
-
-        data = {key: value for key, value in data.items() if value}
-        return data or None
+    def parse(self, response, **kwargs):
+        return None
 
 
 def main():
@@ -96,5 +82,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

@@ -1,5 +1,5 @@
 scrapy
-selenium # required for source 'immport'
+scrapy-selenium # required for source 'immport'
 beautifulsoup4
 extruct
 biothings==0.7.2
