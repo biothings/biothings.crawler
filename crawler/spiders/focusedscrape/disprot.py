@@ -31,6 +31,6 @@ class DisProtSpider(Spider, JsonLdMixin):
                 wait_time=10,
                 wait_until=presence_of_element_located(
                     (By.XPATH,
-                     '//script[@type="application/ld+json"]/text()')
+                     '//script[@type="application/ld+json"]')
                 )
             )
