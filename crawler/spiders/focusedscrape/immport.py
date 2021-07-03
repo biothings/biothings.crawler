@@ -16,7 +16,8 @@
 import requests
 import scrapy
 from scrapy_selenium import SeleniumRequest
-from selenium.webdriver.support.expected_conditions import title_is
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
+from selenium.webdriver.common.by import By
 
 from ..helper import JsonLdMixin
 
@@ -53,14 +54,14 @@ class ImmPortSpider(scrapy.Spider, JsonLdMixin):
 
         prefix = "https://www.immport.org/shared/study/"
         for id_ in ids:
-            # FIXME: the explicit wait condition can break any day
-            #  but on the bright side, it only makes crawling extremely slow.
-            #  If you're run into issues into future, adjust the wait conditions
             yield SeleniumRequest(
                 url=prefix + id_,
                 callback=self.extract_jsonld,
                 wait_time=10,
-                wait_until=title_is("Study Detail")
+                wait_until=presence_of_element_located(
+                    (By.XPATH,
+                     '//script[@type="application/ld+json"]')
+                )
             )
 
     def parse(self, response, **kwargs):
