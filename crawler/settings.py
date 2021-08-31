@@ -9,6 +9,7 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 import os
+from shutil import which
 
 
 BOT_NAME = 'biothings_crawler'
@@ -100,13 +101,7 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 
 # Selenium settings
 SELENIUM_DRIVER_NAME = 'chrome'
-# basically put chromedriver under $PROJ_DIR/venv/bin
-# and make a symlink to google-chrome at the same location
-SELENIUM_DRIVER_EXECUTABLE_PATH = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), os.path.pardir, 'venv', 'bin', 'chromedriver')
-)
+SELENIUM_DRIVER_EXECUTABLE_PATH = which('chromedriver')
 # chrome: '--headless'; firefox: '-headless'
 SELENIUM_DRIVER_ARGUMENTS=['--headless']
-SELENIUM_BROWSER_EXECUTABLE_PATH = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), os.path.pardir, 'venv', 'bin', 'google-chrome')
-)
+SELENIUM_BROWSER_EXECUTABLE_PATH = which('google-chrome')
