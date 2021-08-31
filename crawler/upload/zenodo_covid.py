@@ -88,5 +88,8 @@ class ZenodoCovidUploader(CrawlerESUploader):
         return doc
 
     def extract_id(self, doc):
-
-        return 'zenodo.' + doc.pop('_id').split('.')[-1]
+        if 'conceptrecid' in doc:
+            bareid = doc['conceptrecid']
+            return 'zenodo.'+bareid
+        else:
+            return 'zenodo.' + doc.pop('_id').split('.')[-1]
