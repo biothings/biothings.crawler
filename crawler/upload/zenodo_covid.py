@@ -84,11 +84,6 @@ class ZenodoCovidUploader(CrawlerESUploader):
             else: # unsupported license object
                 doc.pop('license')
         
-        # fix doi field
-        if 'doi' in doc and isinstance(doc['doi'], str):
-            doc['citedBy'] = {
-                'doi': doc.pop('doi')
-            }    
        
         # remove citation field
         doc.delete_keys(['citation'])
