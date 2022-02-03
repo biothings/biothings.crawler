@@ -83,6 +83,13 @@ class ZenodoCovidUploader(CrawlerESUploader):
                 doc['license'] = doc['license']['license']
             else: # unsupported license object
                 doc.pop('license')
+
+        # add check if doi is contained in identifier if so add doi field
+        if 'identifier' in doc:
+            doi = 'https//doi.org/'
+            if doi in doc['identifier']:
+                doc['doi'] = doc['identifier'][len(doi):]
+
         # remove citation field
         doc.delete_keys(['citation'])
         return doc
